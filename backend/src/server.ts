@@ -31,7 +31,6 @@ const allowedTables = {
   employees: ["id", "profile_id", "employee_code", "first_name", "last_name", "cnp", "email", "phone", "address", "department_id", "position", "salary_gross", "salary_net", "hire_date", "contract_type", "work_norm_hours", "annual_leave_days", "manager_id", "status", "termination_date", "created_at", "updated_at"],
   employment_contracts: ["id", "employee_id", "contract_number", "document_path", "created_at", "updated_at"],
   salary_history: ["id", "employee_id", "old_salary_gross", "new_salary_gross", "old_salary_net", "new_salary_net", "reason", "changed_by", "effective_date", "created_at"],
-  leave_balances: ["id", "employee_id", "year", "total_days", "used_days", "remaining_days"],
   requests: ["id", "employee_id", "type", "status", "details", "start_date", "end_date", "requested_salary_gross", "routed_to_role", "assigned_to_employee_id", "decided_by", "decision_comment", "rejection_reason", "submitted_at", "decided_at", "created_at", "updated_at"],
   request_attachments: ["id", "request_id", "uploaded_by", "file_name", "file_path", "mime_type", "created_at"],
   request_approved_dates: ["id", "request_id", "approved_date"],
@@ -44,7 +43,6 @@ const allowedTables = {
   announcements: ["id", "author_id", "title", "content", "target", "created_at"],
   announcement_targets: ["id", "announcement_id", "department_id", "employee_id"],
   notifications: ["id", "recipient_profile_id", "title", "body", "related_request_id", "read_at", "created_at"],
-  report_exports: ["id", "generated_by", "report_type", "department_id", "parameters", "created_at"],
   local_auth_users: ["id", "profile_id", "email", "password_hash", "password_salt", "password_reset_required", "created_at", "updated_at"],
 } as const;
 
@@ -769,7 +767,6 @@ async function authorizeDbQuery(req: express.Request, table: TableName, original
       return query;
 
     case "leave_days":
-    case "leave_balances":
     case "salary_history":
     case "employment_contracts":
     case "employee_documents":
@@ -803,13 +800,6 @@ async function authorizeDbQuery(req: express.Request, table: TableName, original
       if (query.action === "update" || query.action === "delete") {
         await assertNotificationsAllowed(query, user.profileId);
         addFilter(query, "recipient_profile_id", user.profileId);
-        return query;
-      }
-      break;
-
-    case "report_exports":
-      if (query.action === "select") {
-        addFilter(query, "generated_by", user.profileId);
         return query;
       }
       break;
@@ -1215,7 +1205,7 @@ async function executeDelete(table: TableName, query: DbQueryRequest) {
 }
 
 function shouldSyncAfterDbMutation(table: TableName) {
-  return table === "employees" || table === "profiles" || table === "leave_days";
+  return table === "employees" || table === "profiles";
 }
 
 async function afterDbMutation(client: PoolClient, table: TableName, rows: Array<Record<string, unknown>>) {
@@ -1225,11 +1215,8 @@ async function afterDbMutation(client: PoolClient, table: TableName, rows: Array
 
   if (table === "employees") {
     await syncEmployeeProfileData(client, rows);
-    await refreshLeaveBalancesForEmployees(client, rows.map((row) => row.id).filter(Boolean).map(String));
   } else if (table === "profiles") {
     await syncProfileAuthData(client, rows);
-  } else if (table === "leave_days") {
-    await refreshLeaveBalancesForEmployees(client, rows.map((row) => row.employee_id).filter(Boolean).map(String));
   }
 }
 
@@ -1281,55 +1268,6 @@ async function syncProfileAuthData(client: PoolClient, profileRows: Array<Record
   }
 }
 
-async function refreshLeaveBalancesForEmployees(client: PoolClient, employeeIds: string[]) {
-  const uniqueEmployeeIds = Array.from(new Set(employeeIds.filter(Boolean)));
-  if (!uniqueEmployeeIds.length) {
-    return;
-  }
-
-  await client.query(
-    `
-      WITH employee_years AS (
-        SELECT id AS employee_id, EXTRACT(YEAR FROM CURRENT_DATE)::int AS year
-        FROM employees
-        WHERE id = ANY($1::uuid[])
-        UNION
-        SELECT employee_id, EXTRACT(YEAR FROM leave_date)::int AS year
-        FROM leave_days
-        WHERE employee_id = ANY($1::uuid[])
-      ),
-      recalculated AS (
-        SELECT
-          employee_years.employee_id,
-          employee_years.year,
-          employee.annual_leave_days::int AS total_days,
-          COUNT(leave_day.id)::int AS used_days
-        FROM employee_years
-        INNER JOIN employees employee ON employee.id = employee_years.employee_id
-        LEFT JOIN leave_days leave_day
-          ON leave_day.employee_id = employee_years.employee_id
-          AND leave_day.leave_type = 'paid'
-          AND EXTRACT(YEAR FROM leave_day.leave_date)::int = employee_years.year
-        GROUP BY employee_years.employee_id, employee_years.year, employee.annual_leave_days
-      )
-      INSERT INTO leave_balances (employee_id, year, total_days, used_days, remaining_days)
-      SELECT
-        employee_id,
-        year,
-        total_days,
-        used_days,
-        GREATEST(total_days - used_days, 0)
-      FROM recalculated
-      ON CONFLICT (employee_id, year) DO UPDATE
-      SET
-        total_days = EXCLUDED.total_days,
-        used_days = EXCLUDED.used_days,
-        remaining_days = EXCLUDED.remaining_days
-    `,
-    [uniqueEmployeeIds],
-  );
-}
-
 async function normalizeRedundantData() {
   const client = await pool.connect();
   try {
@@ -1377,8 +1315,6 @@ async function normalizeRedundantData() {
       `,
     );
 
-    const { rows } = await client.query("SELECT id FROM employees");
-    await refreshLeaveBalancesForEmployees(client, rows.map((row) => String(row.id)));
     await client.query("COMMIT");
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

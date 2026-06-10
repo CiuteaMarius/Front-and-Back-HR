@@ -94,7 +94,6 @@ model Profile {
   announcements              Announcement[]     @relation("AnnouncementAuthor")
   employeeDocumentsUploaded  EmployeeDocument[] @relation("EmployeeDocumentUploadedBy")
   notifications              Notification[]     @relation("NotificationRecipient")
-  reportExportsGenerated     ReportExport[]     @relation("ReportExportGeneratedBy")
   requestAttachmentsUploaded RequestAttachment[] @relation("RequestAttachmentUploadedBy")
   requestMessagesSent        RequestMessage[]   @relation("RequestMessageSender")
   requestsDecided            Request[]          @relation("RequestDecidedBy")
@@ -129,7 +128,6 @@ model Department {
   manager             Employee?            @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
   announcementTargets AnnouncementTarget[]
   employees           Employee[]           @relation("EmployeeDepartment")
-  reportExports       ReportExport[]
 
   @@map("departments")
 }
@@ -165,7 +163,6 @@ model Employee {
   departmentManaged                 Department[]           @relation("DepartmentManager")
   documents                         EmployeeDocument[]
   employmentContracts               EmploymentContract[]
-  leaveBalances                     LeaveBalance[]
   leaveDays                         LeaveDay[]
   managedEmployees                  Employee[]             @relation("EmployeeManager")
   requests                          Request[]              @relation("RequestEmployee")
@@ -252,19 +249,6 @@ model SalaryHistory {
   employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("salary_history")
-}
-
-model LeaveBalance {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  employeeId    String   @map("employee_id") @db.Uuid
-  year          Int
-  totalDays     Int      @default(20) @map("total_days")
-  usedDays      Int      @default(0) @map("used_days")
-  remainingDays Int?     @map("remaining_days")
-  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
-  @@unique([employeeId, year], map: "leave_balances_employee_id_year_key")
-  @@map("leave_balances")
 }
 
 model Request {
@@ -427,17 +411,4 @@ model Notification {
 
   @@index([recipientProfileId], map: "idx_notifications_recipient")
   @@map("notifications")
-}
-
-model ReportExport {
-  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  generatedBy  String?     @map("generated_by") @db.Uuid
-  reportType   String      @map("report_type")
-  departmentId String?     @map("department_id") @db.Uuid
-  parameters   Json        @default("{}")
-  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  generator    Profile?    @relation("ReportExportGeneratedBy", fields: [generatedBy], references: [id], onDelete: SetNull)
-
-  @@map("report_exports")
 }

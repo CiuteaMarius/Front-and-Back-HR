@@ -19,7 +19,6 @@ type TableName =
   | "employees"
   | "employment_contracts"
   | "salary_history"
-  | "leave_balances"
   | "requests"
   | "request_attachments"
   | "request_approved_dates"
@@ -28,8 +27,7 @@ type TableName =
   | "employee_documents"
   | "announcements"
   | "announcement_targets"
-  | "notifications"
-  | "report_exports";
+  | "notifications";
 
 type DbRow = Record<string, unknown>;
 
@@ -39,7 +37,6 @@ const tableOrder: TableName[] = [
   "employees",
   "employment_contracts",
   "salary_history",
-  "leave_balances",
   "requests",
   "request_attachments",
   "request_approved_dates",
@@ -49,7 +46,6 @@ const tableOrder: TableName[] = [
   "announcements",
   "announcement_targets",
   "notifications",
-  "report_exports",
 ];
 
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
