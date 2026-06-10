@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AppRole {
+  employee
+  manager
+  hr
+
+  @@map("app_role")
+}
+
+enum EmployeeStatus {
+  active
+  fired
+  suspended
+
+  @@map("employee_status")
+}
+
+enum RequestType {
+  medical_leave
+  paid_leave
+  salary_raise
+  complaint
+  other
+
+  @@map("request_type")
+}
+
+enum RequestStatus {
+  pending
+  in_review
+  approved
+  rejected
+  closed
+
+  @@map("request_status")
+}
+
+enum LeaveType {
+  medical
+  paid
+
+  @@map("leave_type")
+}
+
+enum WorkExceptionType {
+  unmotivated_absence
+  overtime
+  late_arrival
+
+  @@map("work_exception_type")
+}
+
+enum AnnouncementTargetScope {
+  all
+  department
+  employees
+
+  @@map("announcement_target")
+}
+
+enum AttendanceCheckoutMode {
+  automatic
+  manual
+
+  @@map("attendance_checkout_mode")
+}
+
+enum AttendanceApprovalStatus {
+  pending
+  approved
+
+  @@map("attendance_approval_status")
+}
+
+model Profile {
+  id                         String             @id @db.Uuid
+  email                      String             @unique
+  fullName                   String             @map("full_name")
+  role                       AppRole            @default(employee)
+  avatarUrl                  String?            @map("avatar_url")
+  preferredLanguage          String             @default("en") @map("preferred_language")
+  preferredTheme             String             @default("light") @map("preferred_theme")
+  createdAt                  DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                  DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  employee                   Employee?
+  announcements              Announcement[]     @relation("AnnouncementAuthor")
+  employeeDocumentsUploaded  EmployeeDocument[] @relation("EmployeeDocumentUploadedBy")
+  notifications              Notification[]     @relation("NotificationRecipient")
+  reportExportsGenerated     ReportExport[]     @relation("ReportExportGeneratedBy")
+  requestAttachmentsUploaded RequestAttachment[] @relation("RequestAttachmentUploadedBy")
+  requestMessagesSent        RequestMessage[]   @relation("RequestMessageSender")
+  requestsDecided            Request[]          @relation("RequestDecidedBy")
+  salaryHistoryChanged       SalaryHistory[]    @relation("SalaryHistoryChangedBy")
+  localAuthUser              LocalAuthUser?
+
+  @@map("profiles")
+}
+
+model LocalAuthUser {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId             String   @unique @map("profile_id") @db.Uuid
+  email                 String   @unique
+  passwordHash          String   @map("password_hash")
+  passwordSalt          String   @map("password_salt")
+  passwordResetRequired Boolean  @default(true) @map("password_reset_required")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  profile               Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("local_auth_users")
+}
+
+model Department {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String               @unique
+  iconKey             String               @default("community-garden") @map("icon_key")
+  description         String?
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  managerId           String?              @map("manager_id") @db.Uuid
+  manager             Employee?            @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  announcementTargets AnnouncementTarget[]
+  employees           Employee[]           @relation("EmployeeDepartment")
+  reportExports       ReportExport[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id                                String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId                         String?                @unique @map("profile_id") @db.Uuid
+  employeeCode                      String?                @unique @map("employee_code")
+  firstName                         String                 @map("first_name")
+  lastName                          String                 @map("last_name")
+  cnp                               String?                @unique
+  email                             String                 @unique
+  phone                             String?
+  address                           String?
+  departmentId                      String?                @map("department_id") @db.Uuid
+  position                          String
+  salaryGross                       Decimal                @map("salary_gross") @db.Decimal
+  salaryNet                         Decimal?               @map("salary_net") @db.Decimal
+  hireDate                          DateTime               @map("hire_date") @db.Date
+  contractType                      String                 @default("nedeterminata") @map("contract_type")
+  workNormHours                     Decimal                @default(8) @map("work_norm_hours") @db.Decimal
+  annualLeaveDays                   Int                    @default(20) @map("annual_leave_days")
+  managerId                         String?                @map("manager_id") @db.Uuid
+  status                            EmployeeStatus         @default(active)
+  terminationDate                   DateTime?              @map("termination_date") @db.Date
+  createdAt                         DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                         DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department                        Department?            @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+  manager                           Employee?              @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  profile                           Profile?               @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  announcementTargets               AnnouncementTarget[]
+  assignedRequests                  Request[]              @relation("RequestAssignedEmployee")
+  departmentManaged                 Department[]           @relation("DepartmentManager")
+  documents                         EmployeeDocument[]
+  employmentContracts               EmploymentContract[]
+  leaveBalances                     LeaveBalance[]
+  leaveDays                         LeaveDay[]
+  managedEmployees                  Employee[]             @relation("EmployeeManager")
+  requests                          Request[]              @relation("RequestEmployee")
+  salaryHistory                     SalaryHistory[]
+  workTimeExceptions                WorkTimeException[]    @relation("WorkTimeExceptionEmployee")
+  workTimeExceptionsReported        WorkTimeException[]    @relation("WorkTimeExceptionReportedBy")
+  attendanceRecords                 AttendanceRecord[]     @relation("AttendanceEmployee")
+  attendanceRecordsApproved         AttendanceRecord[]     @relation("AttendanceApprovedByManager")
+  workSchedule                      EmployeeWorkSchedule?
+
+  @@index([departmentId], map: "idx_employees_department_id")
+  @@index([managerId], map: "idx_employees_manager_id")
+  @@index([status], map: "idx_employees_status")
+  @@map("employees")
+}
+
+model AttendanceRecord {
+  id                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId          String                   @map("employee_id") @db.Uuid
+  attendanceDate      DateTime                 @map("attendance_date") @db.Date
+  checkInAt           DateTime                 @map("check_in_at") @db.Timestamptz(6)
+  scheduledCheckOutAt DateTime                 @map("scheduled_check_out_at") @db.Timestamptz(6)
+  checkOutAt          DateTime                 @map("check_out_at") @db.Timestamptz(6)
+  checkoutMode        AttendanceCheckoutMode   @default(automatic) @map("checkout_mode")
+  sessionType         String                   @default("normal") @map("session_type")
+  workedHours         Decimal                  @default(0) @map("worked_hours") @db.Decimal(8, 2)
+  overtimeHours       Decimal                  @default(0) @map("overtime_hours") @db.Decimal(8, 2)
+  approvalStatus      AttendanceApprovalStatus @default(pending) @map("approval_status")
+  approvedByManagerId String?                  @map("approved_by_manager_id") @db.Uuid
+  approvedAt          DateTime?                @map("approved_at") @db.Timestamptz(6)
+  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  employee            Employee                 @relation("AttendanceEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  approvedByManager   Employee?                @relation("AttendanceApprovedByManager", fields: [approvedByManagerId], references: [id], onDelete: SetNull)
+
+  @@index([attendanceDate], map: "idx_attendance_records_date")
+  @@index([employeeId], map: "idx_attendance_records_employee")
+  @@index([approvalStatus], map: "idx_attendance_records_approval")
+  @@map("attendance_records")
+}
+
+model EmployeeWorkSchedule {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId       String   @unique @map("employee_id") @db.Uuid
+  mode             String   @default("fixed")
+  weeklySchedule   Json     @default("{\"1\":{\"startTime\":\"09:00\"},\"2\":{\"startTime\":\"09:00\"},\"3\":{\"startTime\":\"09:00\"},\"4\":{\"startTime\":\"09:00\"},\"5\":{\"startTime\":\"09:00\"}}") @map("weekly_schedule")
+  shiftDefinitions Json     @default("[]") @map("shift_definitions")
+  rotationAnchorDate DateTime? @map("rotation_anchor_date") @db.Date
+  rotationWorkDays   Int      @default(1) @map("rotation_work_days")
+  rotationOffDays    Int      @default(1) @map("rotation_off_days")
+  rotationStartTime  String   @default("09:00") @map("rotation_start_time")
+  effectiveFrom    DateTime @default(dbgenerated("CURRENT_DATE")) @map("effective_from") @db.Date
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  employee         Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_work_schedules")
+}
+
+model EmploymentContract {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId     String    @map("employee_id") @db.Uuid
+  contractNumber String    @unique @map("contract_number")
+  documentPath   String?   @map("document_path")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  employee       Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employment_contracts")
+}
+
+model SalaryHistory {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId     String   @map("employee_id") @db.Uuid
+  oldSalaryGross Decimal? @map("old_salary_gross") @db.Decimal
+  newSalaryGross Decimal  @map("new_salary_gross") @db.Decimal
+  oldSalaryNet   Decimal? @map("old_salary_net") @db.Decimal
+  newSalaryNet   Decimal? @map("new_salary_net") @db.Decimal
+  reason         String?
+  changedBy      String?  @map("changed_by") @db.Uuid
+  effectiveDate  DateTime @default(now()) @map("effective_date") @db.Date
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  changedByProfile Profile? @relation("SalaryHistoryChangedBy", fields: [changedBy], references: [id], onDelete: SetNull)
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("salary_history")
+}
+
+model LeaveBalance {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId    String   @map("employee_id") @db.Uuid
+  year          Int
+  totalDays     Int      @default(20) @map("total_days")
+  usedDays      Int      @default(0) @map("used_days")
+  remainingDays Int?     @map("remaining_days")
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, year], map: "leave_balances_employee_id_year_key")
+  @@map("leave_balances")
+}
+
+model Request {
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId           String                @map("employee_id") @db.Uuid
+  type                 RequestType
+  status               RequestStatus         @default(pending)
+  details              String?
+  startDate            DateTime?             @map("start_date") @db.Date
+  endDate              DateTime?             @map("end_date") @db.Date
+  requestedSalaryGross Decimal?              @map("requested_salary_gross") @db.Decimal
+  routedToRole         AppRole?              @map("routed_to_role")
+  assignedToEmployeeId String?               @map("assigned_to_employee_id") @db.Uuid
+  decidedBy            String?               @map("decided_by") @db.Uuid
+  decisionComment      String?               @map("decision_comment")
+  rejectionReason      String?               @map("rejection_reason")
+  submittedAt          DateTime              @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  decidedAt            DateTime?             @map("decided_at") @db.Timestamptz(6)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  assignedToEmployee   Employee?             @relation("RequestAssignedEmployee", fields: [assignedToEmployeeId], references: [id], onDelete: SetNull)
+  decidedByProfile     Profile?              @relation("RequestDecidedBy", fields: [decidedBy], references: [id], onDelete: SetNull)
+  employee             Employee              @relation("RequestEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  approvedDates        RequestApprovedDate[]
+  attachments          RequestAttachment[]
+  messages             RequestMessage[]
+  leaveDays            LeaveDay[]
+  notifications        Notification[]
+
+  @@index([employeeId], map: "idx_requests_employee_id")
+  @@index([status], map: "idx_requests_status")
+  @@index([type], map: "idx_requests_type")
+  @@map("requests")
+}
+
+model RequestAttachment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId  String   @map("request_id") @db.Uuid
+  uploadedBy String?  @map("uploaded_by") @db.Uuid
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  mimeType   String   @default("application/pdf") @map("mime_type")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  uploader   Profile? @relation("RequestAttachmentUploadedBy", fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@map("request_attachments")
+}
+
+model RequestApprovedDate {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId    String   @map("request_id") @db.Uuid
+  approvedDate DateTime @map("approved_date") @db.Date
+  request      Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, approvedDate], map: "request_approved_dates_request_id_approved_date_key")
+  @@map("request_approved_dates")
+}
+
+model RequestMessage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestId       String   @map("request_id") @db.Uuid
+  senderProfileId String?  @map("sender_profile_id") @db.Uuid
+  body            String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  request         Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  sender          Profile? @relation("RequestMessageSender", fields: [senderProfileId], references: [id], onDelete: SetNull)
+
+  @@index([requestId, createdAt], map: "idx_request_messages_request_created")
+  @@map("request_messages")
+}
+
+model LeaveDay {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId String    @map("employee_id") @db.Uuid
+  requestId  String?   @map("request_id") @db.Uuid
+  leaveType  LeaveType @map("leave_type")
+  leaveDate  DateTime  @map("leave_date") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  request    Request?  @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@unique([employeeId, leaveDate], map: "leave_days_employee_id_leave_date_key")
+  @@index([leaveDate], map: "idx_leave_days_date")
+  @@index([employeeId], map: "idx_leave_days_employee_id")
+  @@map("leave_days")
+}
+
+model WorkTimeException {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId          String            @map("employee_id") @db.Uuid
+  reportedByManagerId String?           @map("reported_by_manager_id") @db.Uuid
+  type                WorkExceptionType
+  exceptionDate       DateTime          @map("exception_date") @db.Date
+  hours               Decimal?          @db.Decimal
+  reason              String?
+  status              RequestStatus     @default(pending)
+  createdAt           DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  employee            Employee          @relation("WorkTimeExceptionEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  reportedByManager   Employee?         @relation("WorkTimeExceptionReportedBy", fields: [reportedByManagerId], references: [id], onDelete: SetNull)
+
+  @@unique([employeeId, type, exceptionDate], map: "work_time_exceptions_employee_type_date_key")
+  @@index([exceptionDate], map: "idx_work_time_exceptions_date")
+  @@index([employeeId], map: "idx_work_time_exceptions_employee")
+  @@map("work_time_exceptions")
+}
+
+model EmployeeDocument {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId String   @map("employee_id") @db.Uuid
+  uploadedBy String?  @map("uploaded_by") @db.Uuid
+  title      String
+  category   String   @default("general")
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  mimeType   String   @default("application/pdf") @map("mime_type")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  uploader   Profile? @relation("EmployeeDocumentUploadedBy", fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@map("employee_documents")
+}
+
+model Announcement {
+  id        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId  String?                 @map("author_id") @db.Uuid
+  title     String
+  content   String
+  target    AnnouncementTargetScope @default(all)
+  createdAt DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  author    Profile?                @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  targets   AnnouncementTarget[]
+
+  @@map("announcements")
+}
+
+model AnnouncementTarget {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  announcementId String        @map("announcement_id") @db.Uuid
+  departmentId   String?       @map("department_id") @db.Uuid
+  employeeId     String?       @map("employee_id") @db.Uuid
+  announcement   Announcement  @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  department     Department?   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  employee       Employee?     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("announcement_targets")
+}
+
+model Notification {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientProfileId String    @map("recipient_profile_id") @db.Uuid
+  title              String
+  body               String
+  relatedRequestId   String?   @map("related_request_id") @db.Uuid
+  readAt             DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  recipient          Profile   @relation("NotificationRecipient", fields: [recipientProfileId], references: [id], onDelete: Cascade)
+  relatedRequest     Request?  @relation(fields: [relatedRequestId], references: [id], onDelete: SetNull)
+
+  @@index([recipientProfileId], map: "idx_notifications_recipient")
+  @@map("notifications")
+}
+
+model ReportExport {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  generatedBy  String?     @map("generated_by") @db.Uuid
+  reportType   String      @map("report_type")
+  departmentId String?     @map("department_id") @db.Uuid
+  parameters   Json        @default("{}")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  generator    Profile?    @relation("ReportExportGeneratedBy", fields: [generatedBy], references: [id], onDelete: SetNull)
+
+  @@map("report_exports")
+}

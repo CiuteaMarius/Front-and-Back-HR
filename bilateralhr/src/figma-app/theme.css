@@ -1,0 +1,391 @@
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 25%, #7dd3fc 50%, #38bdf8 75%, #0ea5e9 100%);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  button:not(:disabled),
+  a[href],
+  [role='button'],
+  summary,
+  label[for],
+  select,
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='file'] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(125, 211, 252, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(14, 165, 233, 0.2) 0%, transparent 50%);
+    animation: aero-float 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dark body {
+    background: linear-gradient(135deg, #0c4a6e 0%, #075985 25%, #0369a1 50%, #0284c7 75%, #0ea5e9 100%);
+  }
+
+  .dark body::before {
+    background:
+      radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(3, 105, 161, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(56, 189, 248, 0.3) 0%, transparent 50%);
+  }
+
+  .hr-light-background {
+    background-image: url('/background/HR_backGround/light_theme/hr_light_background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .hr-light-background .aero-orb {
+    display: none;
+  }
+
+  .dark .hr-light-background {
+    background-image: url('/background/HR_backGround/dark_theme/hr_dark_background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .dark .hr-light-background .aero-orb {
+    display: block;
+  }
+
+  .manager-background {
+    background-image: url('/background/manager_background/light_theme/manager_light_background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .manager-background .aero-orb {
+    display: none;
+  }
+
+  .dark .manager-background {
+    background-image: url('/background/manager_background/dark_theme/manager_dark_background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .dark .manager-background .aero-orb {
+    display: block;
+  }
+
+  .employee-background {
+    background-image: url('/background/Employee_backGround/light_theme/light_theme_employee.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .employee-background .aero-orb {
+    display: none;
+  }
+
+  .dark .employee-background {
+    background-image: url('/background/Employee_backGround/dark_theme/employee_dark_theme.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .dark .employee-background .aero-orb {
+    display: block;
+  }
+
+  @keyframes aero-float {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+      transform: translate(30px, -30px) rotate(5deg);
+    }
+    66% {
+      transform: translate(-20px, 20px) rotate(-5deg);
+    }
+  }
+
+  @keyframes glossy-shine {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+
+  @keyframes bubble-float {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(-20px) scale(1.05);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5), 0 0 40px rgba(56, 189, 248, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 60px rgba(56, 189, 248, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  @keyframes request-flash {
+    0%, 100% {
+      background-color: rgba(236, 254, 255, 0.35);
+      box-shadow: 0 0 0 rgba(34, 211, 238, 0);
+    }
+    45% {
+      background-color: rgba(125, 211, 252, 0.5);
+      box-shadow: 0 0 35px rgba(34, 211, 238, 0.45);
+    }
+  }
+
+  /* Frutiger Aero Glass Card Effect */
+  .aero-glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-top-color: rgba(255, 255, 255, 0.8);
+    border-left-color: rgba(255, 255, 255, 0.8);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.05) inset;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .aero-glass {
+    background: linear-gradient(135deg, rgba(3, 105, 161, 0.6) 0%, rgba(7, 89, 133, 0.4) 100%);
+    border: 2px solid rgba(56, 189, 248, 0.4);
+    border-top-color: rgba(125, 211, 252, 0.6);
+    border-left-color: rgba(125, 211, 252, 0.6);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 1px 0 rgba(125, 211, 252, 0.3) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.2) inset;
+  }
+
+  /* Glossy shine overlay */
+  .aero-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Glossy button effect */
+  .aero-button {
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: rgba(255, 255, 255, 0.6);
+    box-shadow:
+      0 8px 20px rgba(14, 165, 233, 0.4),
+      0 1px 0 rgba(255, 255, 255, 0.5) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.1) inset;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .aero-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .aero-button:hover {
+    background: linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 100%);
+    box-shadow:
+      0 12px 28px rgba(14, 165, 233, 0.6),
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.1) inset;
+  }
+
+  /* Aero input fields */
+  .aero-input {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.8) 100%);
+    border: 2px solid rgba(56, 189, 248, 0.3);
+    border-bottom-color: rgba(56, 189, 248, 0.5);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.05),
+      0 1px 0 rgba(255, 255, 255, 0.8) inset,
+      0 -1px 0 rgba(0, 0, 0, 0.05) inset;
+  }
+
+  .dark .aero-input {
+    background: linear-gradient(180deg, rgba(7, 89, 133, 0.5) 0%, rgba(3, 105, 161, 0.7) 100%);
+    border: 2px solid rgba(56, 189, 248, 0.5);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      0 1px 0 rgba(125, 211, 252, 0.3) inset;
+  }
+
+  .aero-input:focus {
+    border-color: rgba(56, 189, 248, 0.8);
+    box-shadow:
+      0 0 0 4px rgba(56, 189, 248, 0.2),
+      0 4px 12px rgba(56, 189, 248, 0.3),
+      0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  }
+
+  /* Custom scrollbar with Aero theme */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 100%);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 2px 8px rgba(14, 165, 233, 0.4),
+      0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #38bdf8 0%, #0ea5e9 100%);
+    box-shadow:
+      0 4px 12px rgba(14, 165, 233, 0.6),
+      0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: linear-gradient(180deg, rgba(3, 105, 161, 0.3) 0%, rgba(7, 89, 133, 0.2) 100%);
+  }
+}
+
+.aero-input {
+  color: #164e63;
+}
+
+.aero-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.aero-input option {
+  background: #f8fafc;
+  color: #164e63;
+}
+
+.dark .aero-input {
+  color: #e0f2fe;
+}
+
+.dark .aero-input::placeholder {
+  color: #9cc7d9;
+  opacity: 1;
+}
+
+.dark .aero-input option {
+  background: #083344;
+  color: #e0f2fe;
+}
+
+.placeholder-cyan-600\/50::placeholder,
+.placeholder-cyan-700\/70::placeholder,
+.placeholder\:text-cyan-700\/60::placeholder,
+.placeholder\:text-cyan-800\/70::placeholder,
+.placeholder\:text-cyan-800\/75::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.dark .dark\:placeholder-cyan-300\/60::placeholder,
+.dark .dark\:placeholder-cyan-400\/50::placeholder,
+.dark .dark\:placeholder-cyan-400\/60::placeholder,
+.dark .dark\:placeholder\:text-cyan-300\/60::placeholder,
+.dark .dark\:placeholder\:text-cyan-400\/60::placeholder {
+  color: #9cc7d9;
+  opacity: 1;
+}
+
+.aero-glass {
+  color: #164e63;
+}
+
+.dark .aero-glass {
+  color: #e0f2fe;
+}
+
+.aero-glass input:not(.aero-input),
+.aero-glass textarea:not(.aero-input),
+.aero-glass select:not(.aero-input) {
+  color: #164e63;
+}
+
+.aero-glass input:not(.aero-input)::placeholder,
+.aero-glass textarea:not(.aero-input)::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.dark .aero-glass input:not(.aero-input),
+.dark .aero-glass textarea:not(.aero-input),
+.dark .aero-glass select:not(.aero-input) {
+  color: #e0f2fe;
+}
+
+.dark .aero-glass input:not(.aero-input)::placeholder,
+.dark .aero-glass textarea:not(.aero-input)::placeholder {
+  color: #9cc7d9;
+  opacity: 1;
+}
