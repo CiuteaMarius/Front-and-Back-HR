@@ -187,7 +187,7 @@ export function ManagerAttendance() {
                 <article key={employee.id} className="rounded-xl border border-cyan-200/60 bg-white/55 p-3 shadow-sm transition hover:border-cyan-400/70 hover:shadow-md hover:shadow-cyan-500/15 dark:border-cyan-500/25 dark:bg-cyan-950/30">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-2.5">
-                      <ProfileAvatar name={employee.name} className="h-9 w-9 rounded-lg text-[10px] ring-cyan-300/60" />
+                      <ProfileAvatar src={employee.avatarUrl} name={employee.name} className="h-9 w-9 rounded-lg text-[10px] ring-cyan-300/60" />
                       <div>
                         <p className="text-sm font-black text-cyan-900 dark:text-cyan-100">{employee.name}</p>
                         <p className="text-[11px] font-bold text-cyan-600 dark:text-cyan-300">{employee.employeeCode || t('noCode')} - {departmentLabel(employee)}</p>

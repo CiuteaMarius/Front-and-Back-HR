@@ -566,6 +566,7 @@ export function HRRequests() {
             pendingRequests.map((request) => {
               const isMedicalRejecting = medicalRejectRequest?.id === request.id;
               const isHighlighted = highlightedRequestId === request.id;
+              const requestEmployee = employeeForRequest(request);
 
               return (
               <div
@@ -578,11 +579,11 @@ export function HRRequests() {
                 <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <ProfileAvatar name={request.employeeName} className="h-10 w-10 text-xs" />
+                      <ProfileAvatar src={requestEmployee?.avatarUrl} name={request.employeeName} className="h-10 w-10 text-xs" />
                       <div>
                         <h3 className="font-bold text-cyan-800 dark:text-cyan-200">{request.employeeName}</h3>
                         <p className="text-xs font-bold text-cyan-600 dark:text-cyan-300">
-                          {employeeForRequest(request)?.employeeCode || t('noCode')}
+                          {requestEmployee?.employeeCode || t('noCode')}
                         </p>
                       </div>
                     </div>
@@ -718,6 +719,7 @@ export function HRRequests() {
             const isHighlighted = highlightedRequestId === request.id;
             const outcomeSummary = requestOutcomeSummary(request);
             const outcomeLabel = request.type === 'salary-raise' ? t('salaryChange') : t('leaveInterval');
+            const requestEmployee = employeeForRequest(request);
 
             return (
             <div
@@ -730,11 +732,11 @@ export function HRRequests() {
               <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <ProfileAvatar name={request.employeeName} className="h-10 w-10 text-xs" />
+                    <ProfileAvatar src={requestEmployee?.avatarUrl} name={request.employeeName} className="h-10 w-10 text-xs" />
                     <div>
                       <h3 className="font-bold text-cyan-800 dark:text-cyan-200">{request.employeeName}</h3>
                       <p className="text-xs font-bold text-cyan-600 dark:text-cyan-300">
-                        {employeeForRequest(request)?.employeeCode || t('noCode')}
+                        {requestEmployee?.employeeCode || t('noCode')}
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-white/40 shadow-lg ${

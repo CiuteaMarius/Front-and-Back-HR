@@ -57,6 +57,65 @@
       radial-gradient(circle at 40% 80%, rgba(56, 189, 248, 0.3) 0%, transparent 50%);
   }
 
+  .opal-login-background {
+    isolation: isolate;
+    background:
+      radial-gradient(900px 640px at 12% 18%, rgba(244, 114, 182, 0.22), transparent 58%),
+      radial-gradient(880px 660px at 88% 16%, rgba(45, 212, 191, 0.24), transparent 56%),
+      radial-gradient(760px 620px at 52% 92%, rgba(132, 204, 22, 0.18), transparent 58%),
+      linear-gradient(135deg, #f8fbff 0%, #dcfbf5 28%, #e7efff 58%, #fae8ff 100%);
+  }
+
+  .opal-login-background::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(116deg, transparent 0 21%, rgba(255, 255, 255, 0.46) 32%, transparent 44% 100%),
+      linear-gradient(151deg, transparent 0 56%, rgba(186, 230, 253, 0.36) 63%, transparent 73%),
+      conic-gradient(from 215deg at 62% 42%, rgba(255, 255, 255, 0.45), rgba(125, 211, 252, 0.16), rgba(250, 204, 21, 0.12), rgba(216, 180, 254, 0.22), rgba(255, 255, 255, 0.45));
+    opacity: 0.76;
+    filter: blur(1px);
+  }
+
+  .opal-login-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(100deg, rgba(14, 116, 144, 0.08) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(10deg, rgba(255, 255, 255, 0.5) 0 1px, transparent 1px 30px);
+    mask-image: linear-gradient(135deg, transparent 0%, black 16%, black 78%, transparent 100%);
+    opacity: 0.28;
+  }
+
+  .dark .opal-login-background {
+    background:
+      radial-gradient(900px 640px at 10% 18%, rgba(244, 114, 182, 0.24), transparent 58%),
+      radial-gradient(880px 660px at 88% 14%, rgba(20, 184, 166, 0.28), transparent 56%),
+      radial-gradient(780px 640px at 52% 95%, rgba(132, 204, 22, 0.16), transparent 60%),
+      linear-gradient(135deg, #08111f 0%, #0b3b4a 34%, #16234f 65%, #351347 100%);
+  }
+
+  .dark .opal-login-background::before {
+    background:
+      linear-gradient(116deg, transparent 0 21%, rgba(255, 255, 255, 0.14) 32%, transparent 44% 100%),
+      linear-gradient(151deg, transparent 0 56%, rgba(34, 211, 238, 0.2) 63%, transparent 73%),
+      conic-gradient(from 215deg at 62% 42%, rgba(56, 189, 248, 0.16), rgba(244, 114, 182, 0.16), rgba(132, 204, 22, 0.1), rgba(59, 130, 246, 0.2), rgba(56, 189, 248, 0.16));
+    opacity: 0.82;
+  }
+
+  .dark .opal-login-background::after {
+    background-image:
+      repeating-linear-gradient(100deg, rgba(103, 232, 249, 0.1) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(10deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 30px);
+    opacity: 0.34;
+  }
+
   .hr-light-background {
     background-image: url('/background/HR_backGround/light_theme/hr_light_background.png');
     background-size: cover;

@@ -545,6 +545,21 @@ async function permittedEmployeeIds(user: AppUser) {
   return [user.id, ...rows.map((row) => String(row.id))];
 }
 
+async function permittedProfileIds(user: AppUser) {
+  const employeeIds = await permittedEmployeeIds(user);
+  const { rows } = await pool.query(
+    `
+      SELECT profile_id
+      FROM employees
+      WHERE id = ANY($1::uuid[])
+        AND profile_id IS NOT NULL
+    `,
+    [employeeIds],
+  );
+
+  return Array.from(new Set([user.profileId, ...rows.map((row) => String(row.profile_id))]));
+}
+
 async function assertRequestsAllowed(requestIds: string[], allowedEmployeeIds: string[], message: string) {
   if (requestIds.length === 0) {
     throw new Error(message);
@@ -714,7 +729,7 @@ async function authorizeDbQuery(req: express.Request, table: TableName, original
 
     case "profiles":
       if (query.action === "select") {
-        addFilter(query, "id", user.profileId);
+        addInFilter(query, "id", await permittedProfileIds(user));
         return query;
       }
       if (query.action === "update") {
@@ -1499,6 +1514,39 @@ app.get("/api/auth/me", async (req, res) => {
   }
 
   res.json({ user });
+});
+
+app.patch("/api/profile-picture", async (req, res) => {
+  try {
+    const user = await authenticatedUser(req);
+    if (!user) {
+      res.status(401).json({ message: "Authentication is required." });
+      return;
+    }
+
+    const avatarUrl = req.body?.avatarUrl === null || req.body?.avatarUrl === ""
+      ? null
+      : String(req.body?.avatarUrl ?? "");
+
+    if (avatarUrl && !avatarUrl.startsWith("data:image/") && !/^https?:\/\//i.test(avatarUrl)) {
+      res.status(400).json({ message: "Profile picture must be an image data URL or a web URL." });
+      return;
+    }
+
+    const { rows } = await pool.query(
+      `
+        UPDATE profiles
+        SET avatar_url = $2
+        WHERE id = $1
+        RETURNING avatar_url
+      `,
+      [user.profileId, avatarUrl],
+    );
+
+    res.json({ profilePicture: rows[0]?.avatar_url ?? null });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Could not save profile picture." });
+  }
 });
 
 app.post("/api/auth/logout", (_req, res) => {

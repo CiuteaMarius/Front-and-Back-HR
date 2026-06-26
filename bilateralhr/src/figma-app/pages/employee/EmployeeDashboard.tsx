@@ -5,12 +5,13 @@ import { BadgeCheck, Briefcase, Camera, Clock, CreditCard, FileSpreadsheet, File
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { fetchAnnualLeaveBalance, fetchEmployees, subscribeToDataChanges, updateEmployee } from '../../utils/data';
+import { fetchAnnualLeaveBalance, fetchEmployees, subscribeToDataChanges, updateEmployee, updateProfilePicture } from '../../utils/data';
 import type { AnnualLeaveBalance } from '../../utils/data';
 import type { Employee } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { greetingKeyForCurrentTime } from '../../utils/greeting';
 import { AeroIcon } from '../../components/AeroIcon';
+import { forgetProfilePicture, rememberProfilePicture, resolveProfilePicture } from '../../utils/profilePictures';
 
 type EditableField = 'phone' | 'address';
 
@@ -38,6 +39,7 @@ export function EmployeeDashboard() {
   const [photoZoom, setPhotoZoom] = useState(1);
   const [photoOffsetX, setPhotoOffsetX] = useState(0);
   const [photoOffsetY, setPhotoOffsetY] = useState(0);
+  const [photoError, setPhotoError] = useState('');
   const containerRef = useRef<HTMLDivElement | null>(null);
   const personalInfoButtonRef = useRef<HTMLButtonElement | null>(null);
   const detailsPanelRef = useRef<HTMLDivElement | null>(null);
@@ -45,14 +47,21 @@ export function EmployeeDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    window.localStorage.removeItem(`hr-profile-picture:${user.id}`);
-    setCustomAvatar(null);
+    setCustomAvatar(resolveProfilePicture(user.profilePicture, user.id, user.profileId));
 
     const loadEmployee = async () => {
       const employees = await fetchEmployees();
       const currentEmployee = employees.find((item) => item.id === user.id || item.email === user.email);
       setEmployee(currentEmployee || null);
       setAnnualLeaveBalance(currentEmployee ? await fetchAnnualLeaveBalance(currentEmployee.id) : null);
+
+      const storedPicture = resolveProfilePicture(user.profilePicture, user.id, user.profileId, currentEmployee?.id, currentEmployee?.profileId);
+      setCustomAvatar(storedPicture ?? null);
+      if (storedPicture && storedPicture !== user.profilePicture && !currentEmployee?.avatarUrl) {
+        updateProfilePicture(storedPicture).catch((error) => {
+          console.warn('Could not sync stored profile picture to the backend:', error);
+        });
+      }
     };
 
     loadEmployee();
@@ -100,12 +109,14 @@ export function EmployeeDashboard() {
   if (!user) return null;
 
   const profilePicture = customAvatar || employee?.avatarUrl || user.profilePicture || defaultProfilePicture();
+  const profilePictureIds = [user.id, user.profileId, employee?.id, employee?.profileId];
 
   const openPhotoModal = () => {
     setPhotoDraft(profilePicture || null);
     setPhotoZoom(1);
     setPhotoOffsetX(0);
     setPhotoOffsetY(0);
+    setPhotoError('');
     setIsPhotoModalOpen(true);
   };
 
@@ -117,6 +128,7 @@ export function EmployeeDashboard() {
       setPhotoZoom(1);
       setPhotoOffsetX(0);
       setPhotoOffsetY(0);
+      setPhotoError('');
     };
     reader.readAsDataURL(file);
   };
@@ -124,7 +136,7 @@ export function EmployeeDashboard() {
   const savePhoto = async () => {
     if (!photoDraft) return;
     const image = new Image();
-    image.onload = () => {
+    image.onload = async () => {
       const size = 320;
       const canvas = document.createElement('canvas');
       canvas.width = size;
@@ -141,18 +153,30 @@ export function EmployeeDashboard() {
 
       context.drawImage(image, dx, dy, width, height);
       const croppedPhoto = canvas.toDataURL('image/jpeg', 0.88);
-      window.localStorage.setItem(`hr-profile-picture:${user.id}`, croppedPhoto);
+      try {
+        await updateProfilePicture(croppedPhoto);
+      } catch {
+        setPhotoError(t('profilePictureSaveError'));
+        return;
+      }
+      rememberProfilePicture(croppedPhoto, ...profilePictureIds);
       setCustomAvatar(croppedPhoto);
       setIsPhotoModalOpen(false);
     };
+    image.onerror = () => setPhotoError(t('profilePictureReadError'));
     image.src = photoDraft;
   };
 
   const deletePhoto = () => {
-    window.localStorage.removeItem(`hr-profile-picture:${user.id}`);
-    setCustomAvatar(null);
-    setPhotoDraft(null);
-    setIsPhotoModalOpen(false);
+    updateProfilePicture(null)
+      .then(() => {
+        forgetProfilePicture(...profilePictureIds);
+        setCustomAvatar(null);
+        setPhotoDraft(null);
+        setPhotoError('');
+        setIsPhotoModalOpen(false);
+      })
+      .catch(() => setPhotoError(t('profilePictureDeleteError')));
   };
 
   const startEditing = (field: EditableField) => {
@@ -205,9 +229,22 @@ export function EmployeeDashboard() {
           <div className="rounded-xl border border-cyan-300/40 bg-white/40 p-3 dark:bg-cyan-900/20 sm:col-span-2">
             <div className="flex items-center gap-3">
               <div className="group relative">
-                <ProfileAvatar name={profile.name} className="h-14 w-14 border-2 border-white/70 text-base shadow-cyan-500/20 dark:bg-cyan-950/50" />
+                <button
+                  type="button"
+                  onClick={openPhotoModal}
+                  className="relative block cursor-pointer rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-cyan-300 dark:focus:ring-offset-cyan-950"
+                  title={t('profilePicture')}
+                  aria-label={t('profilePicture')}
+                >
+                  <ProfileAvatar src={profilePicture} name={profile.name} className="h-14 w-14 border-2 border-white/70 text-base shadow-cyan-500/20 dark:bg-cyan-950/50" />
+                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl bg-cyan-950/35 opacity-0 backdrop-blur-[1px] transition group-hover:opacity-100">
+                    <span className="rounded-full border border-white/80 bg-white/85 p-2 text-cyan-700 shadow-lg shadow-cyan-500/30 dark:bg-cyan-950/85 dark:text-cyan-100">
+                      <Pencil className="h-4 w-4" />
+                    </span>
+                  </span>
+                </button>
                 <div className="pointer-events-none absolute left-full top-0 z-50 ml-3 hidden h-36 w-36 overflow-hidden rounded-2xl border-2 border-white/70 bg-white/80 p-1 shadow-2xl shadow-cyan-500/30 backdrop-blur-xl group-hover:block dark:bg-cyan-950/80">
-                  <ProfileAvatar name={profile.name} className="h-full w-full rounded-xl text-3xl" />
+                  <ProfileAvatar src={profilePicture} name={profile.name} className="h-full w-full rounded-xl text-3xl" />
                 </div>
               </div>
               <div className="min-w-0">
@@ -344,7 +381,16 @@ export function EmployeeDashboard() {
 
             <div className="mx-auto mb-5 flex h-64 w-64 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/70 bg-white/55 shadow-inner dark:bg-cyan-950/35">
               {photoDraft ? (
-                <ProfileAvatar name={profile.name} className="h-full w-full rounded-2xl text-4xl" />
+                <img
+                  src={photoDraft}
+                  alt={profile.name}
+                  className="h-full w-full object-cover"
+                  style={{
+                    transform: `translate(${photoOffsetX}%, ${photoOffsetY}%) scale(${photoZoom})`,
+                    transformOrigin: 'center',
+                  }}
+                  draggable={false}
+                />
               ) : (
                 <User className="h-20 w-20 text-cyan-500" />
               )}
@@ -381,6 +427,11 @@ export function EmployeeDashboard() {
               </label>
 
               <div className="flex flex-wrap gap-3 pt-2">
+                {photoError && (
+                  <p className="w-full rounded-xl border border-red-200/70 bg-red-50/85 px-4 py-3 text-sm font-black text-red-700 shadow-inner dark:border-red-400/25 dark:bg-red-950/30 dark:text-red-200">
+                    {photoError}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={savePhoto}

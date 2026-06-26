@@ -10,6 +10,7 @@ import { SettingsPage } from '../../pages/SettingsPage';
 import { NotificationModal } from '../NotificationModal';
 import { notificationText } from '../../utils/notificationText';
 import { ProfileAvatar } from '../ProfileAvatar';
+import { PROFILE_PICTURE_CHANGED_EVENT, resolveProfilePicture } from '../../utils/profilePictures';
 
 export function TopNav() {
   const { user, logout } = useAuth();
@@ -21,6 +22,7 @@ export function TopNav() {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string | undefined>(undefined);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -47,6 +49,25 @@ export function TopNav() {
     document.addEventListener('mousedown', handleDocumentClick);
     return () => document.removeEventListener('mousedown', handleDocumentClick);
   }, [showNotifications]);
+
+  useEffect(() => {
+    if (!user) {
+      setProfilePicture(undefined);
+      return;
+    }
+
+    const syncProfilePicture = () => {
+      setProfilePicture(resolveProfilePicture(user.profilePicture, user.id, user.profileId));
+    };
+
+    syncProfilePicture();
+    window.addEventListener(PROFILE_PICTURE_CHANGED_EVENT, syncProfilePicture);
+    window.addEventListener('storage', syncProfilePicture);
+    return () => {
+      window.removeEventListener(PROFILE_PICTURE_CHANGED_EVENT, syncProfilePicture);
+      window.removeEventListener('storage', syncProfilePicture);
+    };
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -98,19 +119,24 @@ export function TopNav() {
 
   if (!user) return null;
 
+  const roleLabel = user.role === 'hr' ? t('humanResourcesDepartment') : t(user.role);
+
   return (
     <>
     <nav className="fixed top-0 left-0 right-0 h-16 z-[90] aero-glass border-b-2 border-white/50 dark:border-cyan-400/30 overflow-visible">
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <span className="text-white font-bold text-lg">HR</span>
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border-2 border-white/70 bg-white/95 shadow-lg shadow-cyan-500/20 dark:border-cyan-300/30 dark:bg-white/95">
+            <img
+              src="/Logo-mark.png"
+              alt={t('appName')}
+              className="h-full w-full object-contain"
+            />
           </div>
-          <div>
-            <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-              {t('appName')}
-            </h1>
-            <p className="text-xs text-cyan-600 dark:text-cyan-300 capitalize font-medium">{t(user.role)} {t('portal')}</p>
+          <div className="flex items-center">
+            <p className="text-sm font-black text-cyan-700 dark:text-cyan-200">
+              {roleLabel}
+            </p>
           </div>
         </div>
 
@@ -218,7 +244,7 @@ export function TopNav() {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-3 px-3 py-2 rounded-xl aero-glass transition-all hover:scale-105"
             >
-              <ProfileAvatar name={user.name} className="h-8 w-8 rounded-lg text-xs ring-white dark:ring-slate-600" />
+              <ProfileAvatar src={profilePicture} name={user.name} className="h-8 w-8 rounded-lg text-xs ring-white dark:ring-slate-600" />
               <div className="text-left hidden md:block">
                 <p className="text-sm font-bold text-cyan-700 dark:text-cyan-200">{user.name}</p>
                 <p className="text-xs text-cyan-600 dark:text-cyan-400 capitalize">{user.role}</p>
@@ -235,7 +261,7 @@ export function TopNav() {
                 <div className="fixed right-6 top-20 w-64 aero-glass rounded-2xl z-[70] overflow-hidden shadow-2xl">
                   <div className="p-4 border-b-2 border-cyan-300/30 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/20 dark:to-blue-900/20">
                     <div className="flex items-center gap-3">
-                      <ProfileAvatar name={user.name} className="h-12 w-12 rounded-xl text-sm ring-cyan-400/50" />
+                      <ProfileAvatar src={profilePicture} name={user.name} className="h-12 w-12 rounded-xl text-sm ring-cyan-400/50" />
                       <div>
                         <p className="font-bold text-cyan-700 dark:text-cyan-200">{user.name}</p>
                         <p className="text-sm text-cyan-600 dark:text-cyan-400">{user.email}</p>

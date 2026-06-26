@@ -2,6 +2,7 @@
 import { createClient } from '@/src/lib/local-api/client';
 import type { Announcement, AttendanceRecord, Department, Employee, EmployeeDocument, EmployeeStatus, EmployeeWorkSchedule, HRReports, LeaveDay, ManagerAttendanceOverview, ManagerReport, ManagerReportType, Notification, Request, RequestMessage, WorkTimeException } from '../types';
 import { findLeaveDateOverlap, getLeaveDateRange, getLeaveDates } from './leaveRules';
+import { resolveProfilePicture } from './profilePictures';
 
 type RequestInput = {
   employeeId: string;
@@ -491,7 +492,7 @@ export async function fetchEmployees(): Promise<Employee[]> {
       managerId: employee.manager_id ? String(employee.manager_id) : undefined,
       managerName: employee.manager_id ? employeeNamesById.get(String(employee.manager_id)) : undefined,
       profileId: employee.profile_id ? String(employee.profile_id) : undefined,
-      avatarUrl: profile?.avatar_url || undefined,
+      avatarUrl: resolveProfilePicture(profile?.avatar_url, String(employee.id), employee.profile_id ? String(employee.profile_id) : undefined),
       role: profile?.role,
       status: (['default', 'active', 'fired', 'suspended'].includes(String(employee.status ?? 'default').toLowerCase())
         ? String(employee.status ?? 'default').toLowerCase()
@@ -837,11 +838,17 @@ export async function addEmployee(input: EmployeeInput) {
 
 export async function fetchAvailableLoginAccounts(): Promise<AvailableLoginAccount[]> {
   const token = inBrowser() ? window.localStorage.getItem(AUTH_TOKEN_KEY) : null;
-  const response = await fetch(`${API_URL}/api/hr/available-login-accounts`, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_URL}/api/hr/available-login-accounts`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch {
+    return [];
+  }
 
   if (!response.ok) {
     return [];
@@ -898,6 +905,14 @@ export async function updateEmployee(employeeId: string, input: EmployeeUpdateIn
   }
 
   writeEmployeeUpdatedAt(employeeId, new Date().toISOString());
+  emitDataChange();
+}
+
+export async function updateProfilePicture(avatarUrl: string | null) {
+  await authenticatedRequest('/api/profile-picture', {
+    method: 'PATCH',
+    body: JSON.stringify({ avatarUrl }),
+  });
   emitDataChange();
 }
 

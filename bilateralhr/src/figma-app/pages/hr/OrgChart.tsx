@@ -91,7 +91,7 @@ export function OrgChart() {
 
           <div className="relative z-10 flex flex-col items-center gap-3">
             <div className="rounded-2xl bg-gradient-to-b from-cyan-300 to-blue-600 p-2 shadow-xl shadow-cyan-500/40">
-              <ProfileAvatar name={node.employee.name} className="h-20 w-20 rounded-xl text-xl ring-4 ring-white/70" />
+              <ProfileAvatar src={node.employee.avatarUrl} name={node.employee.name} className="h-20 w-20 rounded-xl text-xl ring-4 ring-white/70" />
             </div>
             <div className="text-center">
               <h3 className="text-lg font-bold text-cyan-900 dark:text-cyan-100">{node.employee.name}</h3>

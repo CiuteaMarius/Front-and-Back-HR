@@ -7,7 +7,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { mondayFirstLeadingDays, mondayFirstWeekdayKeys } from '../../utils/calendar';
 import { fetchEmployees, fetchLeaveDays, fetchRequests, proposeRequestDates, subscribeToDataChanges, updateRequestStatus } from '../../utils/data';
 import { findLeaveDateOverlap, getLeaveDates } from '../../utils/leaveRules';
-import type { LeaveDay, Request } from '../../types';
+import type { Employee, LeaveDay, Request } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { PageInfoButton } from '../../components/PageInfoButton';
 import { AeroIcon } from '../../components/AeroIcon';
@@ -60,6 +60,7 @@ export function AnswerRequests() {
   const [proposalMessage, setProposalMessage] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [leaveDays, setLeaveDays] = useState<LeaveDay[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [allRequests, setAllRequests] = useState<Request[]>([]);
   const [calendarError, setCalendarError] = useState('');
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
@@ -88,6 +89,7 @@ export function AnswerRequests() {
 
       setAllRequests(requestItems);
       setRequests(managerRequests);
+      setEmployees(employeeItems);
       setLeaveDays(
         leaveDayItems
           .map((leaveDay) => ({
@@ -211,6 +213,9 @@ export function AnswerRequests() {
     if (type === 'hr-message') return t('hrMessage');
     return t('salaryRaise');
   };
+
+  const employeeForRequest = (request: Request) =>
+    employees.find((employee) => employee.id === request.employeeId);
   const statusLabel = (status: Request['status']) => {
     if (status === 'approved') return t('approved');
     if (status === 'rejected') return t('rejected');
@@ -259,6 +264,7 @@ export function AnswerRequests() {
           ) : (
             pendingRequests.map((request) => {
               const isHighlighted = highlightedRequestId === request.id;
+              const requestEmployee = employeeForRequest(request);
 
               return (
               <button
@@ -271,7 +277,7 @@ export function AnswerRequests() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                      <ProfileAvatar name={request.employeeName} className="h-10 w-10 rounded-lg text-xs" />
+                      <ProfileAvatar src={requestEmployee?.avatarUrl} name={request.employeeName} className="h-10 w-10 rounded-lg text-xs" />
                       <div>
                         <h3 className="font-bold text-cyan-800 dark:text-cyan-200">{request.employeeName}</h3>
                         <span className="rounded-full border-2 border-white/30 bg-gradient-to-br from-blue-400 to-blue-600 px-3 py-1 text-xs font-bold text-white">
@@ -328,14 +334,16 @@ export function AnswerRequests() {
               <p className="font-semibold text-cyan-700 dark:text-cyan-300">{t('noProcessedRequests')}</p>
             </div>
           ) : (
-            processedRequests.map((request) => (
+            processedRequests.map((request) => {
+              const requestEmployee = employeeForRequest(request);
+              return (
               <div key={request.id} className="p-6 transition-colors hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20">
                 <p className="mb-3 bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-sm font-black uppercase tracking-[0.12em] text-transparent dark:from-white dark:to-cyan-200">
                   {requestTypeLabel(request.type)}
                 </p>
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 items-center gap-3">
-                    <ProfileAvatar name={request.employeeName} className="h-10 w-10 rounded-lg text-xs" />
+                    <ProfileAvatar src={requestEmployee?.avatarUrl} name={request.employeeName} className="h-10 w-10 rounded-lg text-xs" />
                     <div className="min-w-0">
                       <h3 className="truncate font-bold text-cyan-800 dark:text-cyan-200">{request.employeeName}</h3>
                       <p className="mt-1 text-xs font-semibold text-cyan-600 dark:text-cyan-300">
@@ -357,7 +365,8 @@ export function AnswerRequests() {
                   </span>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

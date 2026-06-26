@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Mail, Lock, User, Users, Briefcase, Sparkles } from 'lucide-react';
+import { IdCard, Mail, Lock, Network, UserCog } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -60,25 +60,19 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Floating light orbs - Frutiger Aero aesthetic */}
-      <div className="fixed top-10 right-10 w-96 h-96 bg-cyan-300/30 rounded-full blur-3xl animate-[bubble-float_8s_ease-in-out_infinite]" style={{ animationDelay: '0s' }}></div>
-      <div className="fixed bottom-20 left-20 w-80 h-80 bg-blue-400/30 rounded-full blur-3xl animate-[bubble-float_10s_ease-in-out_infinite]" style={{ animationDelay: '2s' }}></div>
-      <div className="fixed top-1/2 left-1/3 w-72 h-72 bg-sky-200/20 rounded-full blur-3xl animate-[bubble-float_12s_ease-in-out_infinite]" style={{ animationDelay: '4s' }}></div>
-
+    <div className="opal-login-background min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md relative z-10">
         {/* Login Card */}
-        <div className="aero-glass rounded-3xl p-8 animate-[bubble-float_3s_ease-out]">
+        <div className="aero-glass rounded-3xl p-8">
           {/* Logo/Title */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl aero-button mb-4 animate-[glow-pulse_3s_ease-in-out_infinite] relative">
-              <Users className="w-12 h-12 text-white relative z-10" />
-              <Sparkles className="w-6 h-6 text-yellow-300 absolute top-2 right-2" />
+            <div className="mx-auto mb-3 flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border-2 border-white/70 bg-white/95 shadow-xl shadow-cyan-500/20 dark:border-cyan-300/30 dark:bg-white/95">
+              <img
+                src="/Logo-square.png"
+                alt={t('appName')}
+                className="h-full w-full object-contain"
+              />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400 bg-clip-text text-transparent mb-2">
-              {t('appName')}
-            </h1>
-            <p className="text-cyan-800 dark:text-cyan-200 font-medium">{t('welcomeGlossyWorkspace')}</p>
           </div>
 
           {/* Login Form */}
@@ -149,8 +143,8 @@ export function LoginPage() {
               disabled={quickLoginRole !== null}
               className="flex flex-col items-center gap-2 p-4 rounded-2xl aero-glass hover:scale-110 transition-all group border-2 border-cyan-300/30 disabled:cursor-wait disabled:opacity-60"
             >
-              <div className="w-12 h-12 rounded-xl aero-button flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/40">
-                <Briefcase className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-b from-teal-300 via-cyan-400 to-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/40 border-2 border-white/50">
+                <UserCog className="w-6 h-6 text-white drop-shadow-sm" />
               </div>
               <span className="text-xs font-bold text-cyan-700 dark:text-cyan-300">{t('hr')}</span>
             </button>
@@ -161,8 +155,8 @@ export function LoginPage() {
               disabled={quickLoginRole !== null}
               className="flex flex-col items-center gap-2 p-4 rounded-2xl aero-glass hover:scale-110 transition-all group border-2 border-cyan-300/30 disabled:cursor-wait disabled:opacity-60"
             >
-              <div className="w-12 h-12 rounded-xl aero-button flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/40">
-                <Users className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-b from-sky-300 via-blue-500 to-indigo-700 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/40 border-2 border-white/50">
+                <Network className="w-6 h-6 text-white drop-shadow-sm" />
               </div>
               <span className="text-xs font-bold text-cyan-700 dark:text-cyan-300">{t('manager')}</span>
             </button>
@@ -173,8 +167,8 @@ export function LoginPage() {
               disabled={quickLoginRole !== null}
               className="flex flex-col items-center gap-2 p-4 rounded-2xl aero-glass hover:scale-110 transition-all group border-2 border-cyan-300/30 disabled:cursor-wait disabled:opacity-60"
             >
-              <div className="w-12 h-12 rounded-xl aero-button flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/40">
-                <User className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-b from-lime-200 via-emerald-400 to-teal-700 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/35 border-2 border-white/50">
+                <IdCard className="w-6 h-6 text-white drop-shadow-sm" />
               </div>
               <span className="text-xs font-bold text-cyan-700 dark:text-cyan-300">{t('employee')}</span>
             </button>

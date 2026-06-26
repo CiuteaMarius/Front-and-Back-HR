@@ -350,7 +350,7 @@ export function ViewEmployees() {
                   <td className="px-3 py-4 text-sm text-cyan-700 dark:text-cyan-300 font-medium">#{employee.employeeCode ?? '-'}</td>
                   <td className="px-3 py-4">
                     <div className="flex items-center gap-3">
-                      <ProfileAvatar name={employee.name} className="h-10 w-10 text-xs" />
+                      <ProfileAvatar src={employee.avatarUrl} name={employee.name} className="h-10 w-10 text-xs" />
                       <div>
                         <p className="font-bold text-cyan-800 dark:text-cyan-200">{employee.name}</p>
                         <p className="text-xs text-cyan-600 dark:text-cyan-400">{employee.email}</p>
@@ -766,7 +766,7 @@ export function ViewEmployees() {
               return (
                 <>
             <div className="flex items-center gap-4 mb-6">
-              <ProfileAvatar name={viewingEmployee.name} className="h-16 w-16 rounded-2xl text-lg ring-cyan-300/60" />
+              <ProfileAvatar src={viewingEmployee.avatarUrl} name={viewingEmployee.name} className="h-16 w-16 rounded-2xl text-lg ring-cyan-300/60" />
               <div>
                 <h2 className="text-2xl font-bold text-cyan-900 dark:text-cyan-100">{viewingEmployee.name}</h2>
                 <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{viewingEmployee.email}</p>

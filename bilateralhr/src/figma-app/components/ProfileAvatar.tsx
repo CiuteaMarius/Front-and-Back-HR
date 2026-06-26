@@ -2,10 +2,11 @@ import { useId } from 'react';
 
 type ProfileAvatarProps = {
   name?: string;
+  src?: string | null;
   className?: string;
 };
 
-export function ProfileAvatar({ name, className = '' }: ProfileAvatarProps) {
+export function ProfileAvatar({ name, src, className = '' }: ProfileAvatarProps) {
   const id = useId().replace(/:/g, '');
   const ids = {
     bg: `avatar-bg-${id}`,
@@ -16,9 +17,17 @@ export function ProfileAvatar({ name, className = '' }: ProfileAvatarProps) {
 
   return (
     <div
-      aria-label={name ? `${name} profile placeholder` : 'Profile placeholder'}
+      aria-label={name ? `${name} profile picture` : 'Profile picture'}
       className={`relative shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 via-cyan-50 to-teal-100 ring-2 ring-cyan-300/50 shadow-lg dark:from-slate-800 dark:via-cyan-950 dark:to-teal-950 dark:ring-cyan-500/30 ${className}`}
     >
+      {src ? (
+        <img
+          src={src}
+          alt={name ? `${name} profile picture` : 'Profile picture'}
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
+      ) : (
       <svg
         aria-hidden="true"
         className="h-full w-full"
@@ -79,6 +88,7 @@ export function ProfileAvatar({ name, className = '' }: ProfileAvatarProps) {
           strokeLinecap="round"
         />
       </svg>
+      )}
     </div>
   );
 }

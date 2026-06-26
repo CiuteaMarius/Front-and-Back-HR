@@ -1,8 +1,9 @@
 import { Translations } from '../types';
 
 export const translations: Translations = {
-  appName: { en: 'HR Management', ro: 'Management HR', es: 'Gestion de RR. HH.' },
+  appName: { en: 'OpalHR', ro: 'OpalHR', es: 'OpalHR' },
   portal: { en: 'Portal', ro: 'Portal', es: 'Portal' },
+  humanResourcesDepartment: { en: 'Human Resources Department', ro: 'Departament de resurse umane', es: 'Departamento de recursos humanos' },
 
   login: { en: 'Login', ro: 'Autentificare', es: 'Iniciar sesion' },
   email: { en: 'Email', ro: 'Email', es: 'Correo electronico' },
@@ -375,6 +376,9 @@ export const translations: Translations = {
   horizontalCrop: { en: 'Horizontal crop', ro: 'Decupare orizontală', es: 'Recorte horizontal' },
   verticalCrop: { en: 'Vertical crop', ro: 'Decupare verticală', es: 'Recorte vertical' },
   deletePhoto: { en: 'Delete photo', ro: 'Șterge poza', es: 'Eliminar foto' },
+  profilePictureSaveError: { en: 'The photo could not be saved for the whole application. Please make sure the backend is running and try again.', ro: 'Poza nu a putut fi salvată pentru întreaga aplicație. Verifică dacă serverul backend este pornit și încearcă din nou.', es: 'No se pudo guardar la foto para toda la aplicación. Comprueba que el servidor backend esté activo e inténtalo de nuevo.' },
+  profilePictureDeleteError: { en: 'The photo could not be deleted. Please try again.', ro: 'Poza nu a putut fi ștearsă. Încearcă din nou.', es: 'No se pudo eliminar la foto. Inténtalo de nuevo.' },
+  profilePictureReadError: { en: 'The selected image could not be read. Please choose another file.', ro: 'Imaginea selectată nu a putut fi citită. Alege alt fișier.', es: 'No se pudo leer la imagen seleccionada. Elige otro archivo.' },
   workNorm: { en: 'Work norm', ro: 'Norma de lucru', es: 'Jornada' },
   hoursPerDay: { en: '{hours} h/day', ro: '{hours} h/zi', es: '{hours} h/dia' },
   notAvailable: { en: 'N/A', ro: 'N/A', es: 'N/D' },

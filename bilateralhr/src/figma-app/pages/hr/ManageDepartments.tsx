@@ -347,7 +347,7 @@ function DepartmentMembersPopup({ department, members }: { department: Departmen
           <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
             {members.map((employee) => (
               <div key={employee.id} className="flex items-center gap-2 rounded-xl border border-cyan-200/70 bg-white/70 px-2.5 py-2 shadow-sm dark:border-cyan-700/50 dark:bg-cyan-900/35">
-                <ProfileAvatar name={employee.name} className="h-8 w-8 rounded-lg text-[9px]" />
+                <ProfileAvatar src={employee.avatarUrl} name={employee.name} className="h-8 w-8 rounded-lg text-[9px]" />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-black text-cyan-950 dark:text-cyan-50">{employee.name}</span>
                   <span className="block truncate text-xs font-semibold text-cyan-700 dark:text-cyan-300">{employee.position || employee.employeeCode || employee.email}</span>
