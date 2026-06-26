@@ -7,6 +7,8 @@ import { fetchNotifications, fetchRequests, markNotificationAsRead, subscribeToD
 import { NotificationModal } from '../components/NotificationModal';
 import type { Notification } from '../types';
 import { notificationText } from '../utils/notificationText';
+import { PageInfoButton } from '../components/PageInfoButton';
+import { AeroIcon } from '../components/AeroIcon';
 
 export function NotificationsPage() {
   const { user } = useAuth();
@@ -53,20 +55,13 @@ export function NotificationsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-emerald-500 bg-clip-text text-3xl font-black text-transparent dark:from-cyan-200 dark:via-blue-200 dark:to-emerald-200">
-          {t('notifications')}
-        </h1>
-        <p className="mt-1 text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-          {t('allUpdatesNewestFirst')}.
-        </p>
-      </div>
+    <div className="relative mx-auto max-w-5xl space-y-6 pt-14">
+      <PageInfoButton title={t('notifications')} description={t('notificationsInfo')} />
 
       <div className="aero-glass overflow-hidden rounded-2xl border-2 border-white/50">
         {notifications.length === 0 ? (
           <div className="p-10 text-center">
-            <Inbox className="mx-auto mb-3 h-12 w-12 text-cyan-500/70" />
+            <AeroIcon icon={Inbox} variant="cyan" className="mx-auto mb-4" />
             <p className="font-bold text-cyan-800 dark:text-cyan-200">{t('noNotificationsYet')}</p>
           </div>
         ) : (

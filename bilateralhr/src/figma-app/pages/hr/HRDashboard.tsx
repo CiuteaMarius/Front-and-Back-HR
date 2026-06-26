@@ -9,6 +9,7 @@ import { fetchEmployees, fetchRequests, subscribeToDataChanges } from '../../uti
 import { getLeaveDates } from '../../utils/leaveRules';
 import { greetingKeyForCurrentTime } from '../../utils/greeting';
 import type { Employee, Request } from '../../types';
+import { AeroIcon } from '../../components/AeroIcon';
 
 type DashboardPanel = 'employees' | 'requests' | 'leaves';
 
@@ -242,7 +243,11 @@ export function HRDashboard() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className="h-6 w-6 text-cyan-600 dark:text-cyan-300" />
+                <AeroIcon
+                  icon={Icon}
+                  size="small"
+                  variant={panel === 'requests' ? 'amber' : panel === 'leaves' ? 'emerald' : 'cyan'}
+                />
                 <div>
                   <p className="text-3xl font-bold text-cyan-900 dark:text-cyan-100">{value}</p>
                   <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{label}</p>

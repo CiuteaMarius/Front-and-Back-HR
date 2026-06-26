@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { CalendarDays, Check, X } from 'lucide-react';
 import { mondayFirstLeadingDays, mondayFirstWeekdayKeys } from '../utils/calendar';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 import {
   acceptRequestProposal,
   fetchLeaveDays,
@@ -51,6 +52,7 @@ function getDateRange(startDate?: string, endDate?: string) {
 
 export function NotificationModal({ notification, user, onClose, onChanged }: NotificationModalProps) {
   const { t, formatDate } = useLanguage();
+  const { formatMoney } = useCurrency();
   const display = notificationText(notification, t);
   const [request, setRequest] = useState<Request | null>(null);
   const [leaveDays, setLeaveDays] = useState<LeaveDay[]>([]);
@@ -193,7 +195,7 @@ export function NotificationModal({ notification, user, onClose, onChanged }: No
                   </p>
                   <p className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">
                     {request.type === 'salary-raise'
-                      ? `${t('requestedIncrease')}: $${Number(request.requestedSalaryNetIncrease ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                      ? `${t('requestedIncrease')}: ${formatMoney(Number(request.requestedSalaryNetIncrease ?? 0))}`
                       : `${canRespondToProposal ? t('proposedDates') : t('requested')}: ${dateRangeLabel(requestedOrProposedDates, t('noDatesSelected'), formatDate)}`}
                   </p>
                 </div>

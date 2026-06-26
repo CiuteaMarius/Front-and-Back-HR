@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { downloadManagerReport, fetchEmployees, fetchManagerReport, subscribeToDataChanges } from '../../utils/data';
 import type { Employee, ManagerReport, ManagerReportType } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
 
 const reportTypes: ManagerReportType[] = [
   'team-attendance',
@@ -97,11 +99,10 @@ export function ManagerReports() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <h1 className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-3xl font-black text-transparent dark:from-cyan-300 dark:via-sky-300 dark:to-blue-300">
-          {t('teamReports')}
-        </h1>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('teamReports')} description={t('teamReportsInfo')} />
+
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={handleDownload}
@@ -125,7 +126,7 @@ export function ManagerReports() {
                 : 'border-cyan-200/65 bg-gradient-to-br from-white/75 via-cyan-50/65 to-blue-100/55 text-cyan-900 shadow-cyan-500/10 dark:border-cyan-500/25 dark:from-cyan-950/65 dark:via-blue-950/45 dark:to-slate-950/45 dark:text-cyan-100'
             }`}
           >
-            <FileSpreadsheet className="mb-3 h-6 w-6" />
+            <AeroIcon icon={FileSpreadsheet} size="small" variant={reportType === type ? 'emerald' : 'cyan'} className="mb-3" />
             <span className="block text-sm font-black">{t(reportLabelKeys[type])}</span>
           </button>
         ))}

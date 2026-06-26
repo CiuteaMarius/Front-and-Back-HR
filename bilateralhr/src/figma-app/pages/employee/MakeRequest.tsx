@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { ArrowRight, Calendar, ChevronLeft, ChevronRight, FileText, History, Send, Upload, X } from 'lucide-react';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { mondayFirstLeadingDays, mondayFirstWeekdayKeys } from '../../utils/calendar';
@@ -9,11 +10,13 @@ import { createRequest, fetchAnnualLeaveBalance, fetchEmployees, fetchRequests, 
 import type { AnnualLeaveBalance } from '../../utils/data';
 import { findLeaveDateOverlap, getLeaveDateRange, getLeaveDates } from '../../utils/leaveRules';
 import type { Request } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
 
 export function MakeRequest() {
   const { user } = useAuth();
   const { t, formatDate } = useLanguage();
   const { theme } = useTheme();
+  const { formatMoney, toBaseCurrency, toDisplayCurrency } = useCurrency();
   const [requestType, setRequestType] = useState<'medical-leave' | 'paid-leave' | 'salary-raise'>('medical-leave');
   const [details, setDetails] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -127,6 +130,10 @@ export function MakeRequest() {
         setSubmitError(t('selectLeaveDates'));
         return;
       }
+      if (requestType === 'medical-leave' && documents.length === 0) {
+        setSubmitError(t('medicalDocumentRequired'));
+        return;
+      }
       const candidateLeaveDates = requestType === 'paid-leave' && manualLeaveDates.length > 0
         ? manualLeaveDates
         : getLeaveDateRange(effectiveStartDate, effectiveEndDate);
@@ -165,7 +172,7 @@ export function MakeRequest() {
         startDate: effectiveStartDate,
         endDate: effectiveEndDate,
         requestedDates: requestType === 'paid-leave' && manualLeaveDates.length > 0 ? manualLeaveDates : undefined,
-        requestedSalaryNetIncrease: requestType === 'salary-raise' ? requestedSalaryNetIncrease : undefined,
+        requestedSalaryNetIncrease: requestType === 'salary-raise' ? toBaseCurrency(requestedSalaryNetIncrease) : undefined,
       });
       setDetails('');
       setStartDate('');
@@ -176,7 +183,8 @@ export function MakeRequest() {
       setSubmitMessage(t('requestSubmitted'));
       setRequests(await fetchRequests());
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : t('requestSubmitFailed'));
+      const message = error instanceof Error ? error.message : '';
+      setSubmitError(message === 'medicalDocumentRequired' ? t('medicalDocumentRequired') : message || t('requestSubmitFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -217,6 +225,7 @@ export function MakeRequest() {
   });
   const calendarLeadingDays = mondayFirstLeadingDays(calendarMonth);
   const today = format(new Date(), 'yyyy-MM-dd');
+  const currentNetSalaryDisplay = currentNetSalary === undefined ? undefined : toDisplayCurrency(currentNetSalary);
   const salaryIncreaseValue = Number(salaryIncrease) || 0;
   const selectedPaidLeaveDates = sortedSelectedLeaveDates.length > 0
     ? sortedSelectedLeaveDates
@@ -231,11 +240,11 @@ export function MakeRequest() {
   const projectedPaidLeaveBalance = annualLeaveBalance
     ? Math.max(0, annualLeaveBalance.remainingDays - selectedPaidLeaveDaysCount)
     : undefined;
-  const salaryIncreasePercent = currentNetSalary && salaryIncreaseValue > 0
-    ? (salaryIncreaseValue / currentNetSalary) * 100
+  const salaryIncreasePercent = currentNetSalaryDisplay && salaryIncreaseValue > 0
+    ? (salaryIncreaseValue / currentNetSalaryDisplay) * 100
     : 0;
-  const newNetSalary = currentNetSalary !== undefined && salaryIncreaseValue > 0
-    ? currentNetSalary + salaryIncreaseValue
+  const newNetSalary = currentNetSalaryDisplay !== undefined && salaryIncreaseValue > 0
+    ? currentNetSalaryDisplay + salaryIncreaseValue
     : undefined;
   const leaveCalendarDotClass = (request: Request) => {
     if (request.status !== 'approved') {
@@ -283,7 +292,8 @@ export function MakeRequest() {
   ];
 
   return (
-    <div className="relative max-w-5xl space-y-8">
+    <div className="relative max-w-5xl space-y-8 pt-14">
+      <PageInfoButton title={t('makeRequest')} description={t('makeRequestInfo')} />
       {submitMessage && (
         <div className="fixed left-1/2 top-24 z-[90] w-[min(92vw,420px)] -translate-x-1/2 rounded-2xl border-2 border-white/70 bg-gradient-to-br from-emerald-100/95 via-white/90 to-cyan-100/95 px-5 py-4 pl-11 text-sm font-black text-emerald-800 shadow-2xl shadow-emerald-500/25 backdrop-blur-xl dark:border-emerald-300/25 dark:from-emerald-950/90 dark:via-cyan-950/85 dark:to-cyan-900/85 dark:text-emerald-100">
           <button
@@ -481,7 +491,7 @@ export function MakeRequest() {
                 <div className="rounded-xl border border-cyan-200/50 bg-white/55 p-4 shadow-inner dark:border-cyan-500/20 dark:bg-cyan-950/30">
                   <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-600 dark:text-cyan-300">{t('currentNetSalary')}</p>
                   <p className="mt-2 text-2xl font-black text-cyan-950 dark:text-cyan-100">
-                    {currentNetSalary === undefined ? '-' : `$${currentNetSalary.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                    {currentNetSalary === undefined ? '-' : formatMoney(currentNetSalary)}
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -503,7 +513,7 @@ export function MakeRequest() {
                       {t('raisePercent')}: {salaryIncreasePercent.toFixed(2)}%
                     </span>
                     <span className="rounded-full border border-white/60 bg-white/55 px-4 py-2 shadow-md dark:bg-cyan-950/35">
-                      {t('newNetSalary')}: {newNetSalary === undefined ? '-' : `$${newNetSalary.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                      {t('newNetSalary')}: {newNetSalary === undefined ? '-' : formatMoney(toBaseCurrency(newNetSalary))}
                     </span>
                   </div>
                 </div>
@@ -534,7 +544,7 @@ export function MakeRequest() {
           {requestType === 'medical-leave' && (
             <div>
               <label className="block text-sm font-bold text-cyan-800 dark:text-cyan-200 mb-2">
-                {t('medicalDocumentsSupported')}
+                {t('medicalDocumentsSupported')} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input

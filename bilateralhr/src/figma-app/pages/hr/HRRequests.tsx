@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { FileText, Check, X, AlertCircle, Users, BadgeDollarSign, MessageCircle, Download, ExternalLink, Send } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { mondayFirstLeadingDays, mondayFirstWeekdayKeys } from '../../utils/calendar';
@@ -20,6 +21,8 @@ import {
 import { findLeaveDateOverlap, getLeaveDates } from '../../utils/leaveRules';
 import type { Employee, LeaveDay, Request, RequestMessage } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
 
 type RequestTypeFilter = Request['type'] | 'all';
 const requestTypeFilterOptions: RequestTypeFilter[] = ['all', 'medical-leave', 'paid-leave', 'salary-raise', 'hr-message'];
@@ -47,6 +50,7 @@ function getDateRange(startDate?: string, endDate?: string) {
 
 export function HRRequests() {
   const { t, formatDate } = useLanguage();
+  const { formatMoney, toDisplayCurrency, toBaseCurrency } = useCurrency();
   const [searchParams] = useSearchParams();
   const highlightedRequestId = searchParams.get('requestId');
   const [requests, setRequests] = useState<Request[]>([]);
@@ -135,7 +139,7 @@ export function HRRequests() {
 
     if (request.type === 'salary-raise') {
       setSalaryRequest(request);
-      setSalaryDecisionAmount(String(request.requestedSalaryNetIncrease ?? ''));
+      setSalaryDecisionAmount(String(toDisplayCurrency(Number(request.requestedSalaryNetIncrease ?? 0))));
       setSalaryActionMessage('');
       setSalaryActionError('');
       return;
@@ -270,9 +274,11 @@ export function HRRequests() {
     : undefined;
   const salaryCurrentNet = Number(salaryEmployee?.salaryNet ?? salaryEmployee?.salary ?? 0);
   const salaryRequestedIncrease = Number(salaryRequest?.requestedSalaryNetIncrease ?? 0);
+  const salaryCurrentNetDisplay = toDisplayCurrency(salaryCurrentNet);
+  const salaryRequestedIncreaseDisplay = toDisplayCurrency(salaryRequestedIncrease);
   const salaryDecisionValue = Number(salaryDecisionAmount);
-  const salaryDecisionPercent = salaryCurrentNet > 0 && salaryDecisionValue > 0
-    ? (salaryDecisionValue / salaryCurrentNet) * 100
+  const salaryDecisionPercent = salaryCurrentNetDisplay > 0 && salaryDecisionValue > 0
+    ? (salaryDecisionValue / salaryCurrentNetDisplay) * 100
     : 0;
 
   const handleAskManagerReview = async () => {
@@ -296,7 +302,7 @@ export function HRRequests() {
     setSalaryActionError('');
     try {
       await resolveSalaryRaiseRequest(salaryRequest.id, 'approved', {
-        approvedNetIncrease: amount,
+        approvedNetIncrease: toBaseCurrency(amount),
       });
       setSalaryRequest(null);
       await loadRequestData();
@@ -404,9 +410,6 @@ export function HRRequests() {
     return intervals;
   };
 
-  const formatMoney = (value: number) =>
-    `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-
   const parseDecisionNumber = (request: Request, label: string) => {
     const match = request.decisionComment?.match(new RegExp(`${label}:\\s*([\\d.]+)`));
     const value = match ? Number(match[1]) : Number.NaN;
@@ -497,27 +500,22 @@ export function HRRequests() {
   const leadingDays = mondayFirstLeadingDays(currentMonth);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400 bg-clip-text text-transparent">
-          {t('answerRequests')}
-        </h1>
-      </div>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('answerRequests')} description={t('answerRequestsInfo')} />
 
+      <div className="grid gap-6 xl:grid-cols-2 xl:items-stretch">
       {/* Pending Requests */}
-      <div className="aero-glass rounded-2xl overflow-hidden">
+      <div className="aero-glass flex min-h-0 min-w-0 flex-col rounded-2xl overflow-hidden xl:h-[clamp(460px,calc(100vh-14rem),680px)]">
         <div className="p-6 border-b-2 border-cyan-300/30 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/20 dark:to-blue-900/20">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
             <div className="flex items-center gap-3">
-              <div className="aero-button w-12 h-12 rounded-xl flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-white relative z-10" />
-              </div>
+              <AeroIcon icon={AlertCircle} variant="cyan" />
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-300 dark:to-blue-300 bg-clip-text text-transparent">{t('pendingRequests')}</h2>
                 <p className="text-sm text-cyan-700 dark:text-cyan-300 font-medium">{t('requestsAwaitingReview', { count: pendingRequests.length })}</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(220px,1fr)_180px_170px]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(180px,1fr)_150px_145px]">
               <input
                 list="pending-request-employee-suggestions"
                 value={pendingEmployeeFilter}
@@ -538,7 +536,7 @@ export function HRRequests() {
               >
                 {requestTypeFilterOptions.map((type) => (
                   <option key={type} value={type}>
-                    {type === 'all' ? t('all') : requestTypeLabel(type)}
+                    {type === 'all' ? t('allRequestTypes') : requestTypeLabel(type)}
                   </option>
                 ))}
               </select>
@@ -558,10 +556,10 @@ export function HRRequests() {
             </p>
           )}
         </div>
-        <div className="divide-y divide-cyan-200/30 dark:divide-cyan-700/20">
+        <div className="min-h-0 flex-1 divide-y divide-cyan-200/30 overflow-y-auto dark:divide-cyan-700/20">
           {pendingRequests.length === 0 ? (
             <div className="p-8 text-center">
-              <FileText className="w-12 h-12 text-cyan-400 dark:text-cyan-600 mx-auto mb-3" />
+              <AeroIcon icon={FileText} variant="cyan" className="mx-auto mb-4" />
               <p className="text-cyan-700 dark:text-cyan-300 font-semibold">{t('noPendingRequests')}</p>
             </div>
           ) : (
@@ -572,13 +570,13 @@ export function HRRequests() {
               return (
               <div
                 key={request.id}
-                className={`p-6 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-colors ${
+                className={`p-5 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-colors ${
                   isHighlighted ? 'animate-[request-flash_1.4s_ease-in-out_2] ring-4 ring-cyan-300/70' : ''
                 }`}
               >
                 {renderRequestTypeTitle(request.type)}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <ProfileAvatar name={request.employeeName} className="h-10 w-10 text-xs" />
                       <div>
@@ -589,7 +587,7 @@ export function HRRequests() {
                       </div>
                     </div>
                     <p className="text-sm text-cyan-700 dark:text-cyan-300 font-medium mt-3">{request.details}</p>
-                    <div className="flex items-center gap-4 mt-3">
+                    <div className="flex flex-wrap items-center gap-3 mt-3">
                       <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">
                         {t('submitted')}: {formatDate(new Date(request.submittedDate))}
                       </p>
@@ -608,7 +606,7 @@ export function HRRequests() {
                     </div>
                   </div>
                   {isMedicalRejecting ? (
-                    <div className="ml-4 max-w-md rounded-2xl border border-red-200/70 bg-red-50/80 p-4 shadow-xl shadow-red-500/10 dark:border-red-400/25 dark:bg-red-950/25">
+                    <div className="w-full max-w-md rounded-2xl border border-red-200/70 bg-red-50/80 p-4 shadow-xl shadow-red-500/10 dark:border-red-400/25 dark:bg-red-950/25 2xl:ml-4">
                       <p className="text-sm font-bold text-red-700 dark:text-red-200">{t('rejectMedicalLeaveConfirm')}</p>
                       <div className="mt-3 flex gap-2">
                         <button
@@ -626,7 +624,7 @@ export function HRRequests() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex flex-wrap gap-2 2xl:ml-4 2xl:justify-end">
                       {request.type === 'hr-message' ? (
                         <button
                           onClick={() => openMessageThread(request)}
@@ -673,13 +671,13 @@ export function HRRequests() {
       </div>
 
       {/* Processed Requests */}
-      <div className="aero-glass rounded-2xl overflow-hidden">
+      <div className="aero-glass flex min-h-0 min-w-0 flex-col rounded-2xl overflow-hidden xl:h-[clamp(460px,calc(100vh-14rem),680px)]">
         <div className="p-6 border-b-2 border-cyan-300/30 dark:border-cyan-500/20 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-900/20 dark:to-blue-900/20">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-300 dark:to-blue-300 bg-clip-text text-transparent">{t('processedRequests')}</h2>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(220px,1fr)_180px_170px]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-[minmax(180px,1fr)_150px_145px]">
               <input
                 list="processed-request-employee-suggestions"
                 value={processedEmployeeFilter}
@@ -700,7 +698,7 @@ export function HRRequests() {
               >
                 {requestTypeFilterOptions.map((type) => (
                   <option key={type} value={type}>
-                    {type === 'all' ? t('all') : requestTypeLabel(type)}
+                    {type === 'all' ? t('allRequestTypes') : requestTypeLabel(type)}
                   </option>
                 ))}
               </select>
@@ -715,7 +713,7 @@ export function HRRequests() {
             </div>
           </div>
         </div>
-        <div className="divide-y divide-cyan-200/30 dark:divide-cyan-700/20 max-h-96 overflow-y-auto">
+        <div className="min-h-0 flex-1 divide-y divide-cyan-200/30 overflow-y-auto dark:divide-cyan-700/20">
           {processedRequests.map((request) => {
             const isHighlighted = highlightedRequestId === request.id;
             const outcomeSummary = requestOutcomeSummary(request);
@@ -724,13 +722,13 @@ export function HRRequests() {
             return (
             <div
               key={request.id}
-              className={`p-6 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-colors ${
+              className={`p-5 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-colors ${
                 isHighlighted ? 'animate-[request-flash_1.4s_ease-in-out_2] ring-4 ring-cyan-300/70' : ''
               }`}
             >
               {renderRequestTypeTitle(request.type)}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <ProfileAvatar name={request.employeeName} className="h-10 w-10 text-xs" />
                     <div>
@@ -780,6 +778,8 @@ export function HRRequests() {
             );
           })}
         </div>
+      </div>
+
       </div>
 
       {messageRequest && (
@@ -969,16 +969,16 @@ export function HRRequests() {
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-white/55 bg-white/45 p-4 shadow-inner dark:bg-cyan-950/30">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-600 dark:text-cyan-300">{t('currentNetSalary')}</p>
-                <p className="mt-1 text-2xl font-black text-cyan-950 dark:text-cyan-100">${salaryCurrentNet.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                <p className="mt-1 text-2xl font-black text-cyan-950 dark:text-cyan-100">{formatMoney(salaryCurrentNet)}</p>
               </div>
               <div className="rounded-2xl border border-white/55 bg-white/45 p-4 shadow-inner dark:bg-cyan-950/30">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-600 dark:text-cyan-300">{t('requestedIncrease')}</p>
-                <p className="mt-1 text-2xl font-black text-cyan-950 dark:text-cyan-100">${salaryRequestedIncrease.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+                <p className="mt-1 text-2xl font-black text-cyan-950 dark:text-cyan-100">{formatMoney(salaryRequestedIncrease)}</p>
               </div>
               <div className="rounded-2xl border border-white/55 bg-white/45 p-4 shadow-inner dark:bg-cyan-950/30">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-600 dark:text-cyan-300">{t('raisePercent')}</p>
                 <p className="mt-1 text-2xl font-black text-cyan-950 dark:text-cyan-100">
-                  {salaryCurrentNet > 0 ? ((salaryRequestedIncrease / salaryCurrentNet) * 100).toFixed(2) : '0.00'}%
+                  {salaryCurrentNetDisplay > 0 ? ((salaryRequestedIncreaseDisplay / salaryCurrentNetDisplay) * 100).toFixed(2) : '0.00'}%
                 </p>
               </div>
             </div>
@@ -1034,7 +1034,7 @@ export function HRRequests() {
                   {t('raisePercent')}: {salaryDecisionPercent.toFixed(2)}%
                 </span>
                 <span className="rounded-full border border-white/60 bg-white/55 px-4 py-2 shadow-md dark:bg-cyan-950/35">
-                  {t('newNetSalary')}: ${(salaryCurrentNet + (salaryDecisionValue || 0)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  {t('newNetSalary')}: {formatMoney(toBaseCurrency(salaryCurrentNetDisplay + (salaryDecisionValue || 0)))}
                 </span>
               </div>
             </div>
@@ -1047,7 +1047,7 @@ export function HRRequests() {
 
             <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-4">
               <button
-                onClick={() => handleApproveSalaryRaise(salaryRequestedIncrease)}
+                onClick={() => handleApproveSalaryRaise(salaryRequestedIncreaseDisplay)}
                 className="rounded-xl border-2 border-white/50 bg-gradient-to-b from-emerald-300 to-emerald-600 px-4 py-3 font-black text-white shadow-xl shadow-emerald-500/35 transition hover:scale-[1.02]"
               >
                 {t('approveRequestedRaise')}

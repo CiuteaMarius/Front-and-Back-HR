@@ -118,13 +118,14 @@ export function TopNav() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 rounded-xl aero-glass flex items-center justify-center transition-all hover:scale-110 animate-[glow-pulse_3s_ease-in-out_infinite]"
+            className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/70 bg-gradient-to-b from-cyan-100 via-sky-200 to-blue-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.18),0_3px_0_rgba(14,116,144,0.42),0_10px_20px_rgba(14,165,233,0.26)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.2),0_5px_0_rgba(14,116,144,0.42),0_14px_24px_rgba(14,165,233,0.34)] dark:border-cyan-200/45 dark:from-cyan-700 dark:via-sky-800 dark:to-blue-950"
             title={theme === 'light' ? t('darkMode') : t('lightMode')}
           >
+            <span className="absolute inset-x-1 top-1 h-1/2 rounded-full bg-gradient-to-b from-white/75 to-transparent dark:from-cyan-100/25" />
             {theme === 'light' ? (
-              <Moon className="w-5 h-5 text-cyan-600 dark:text-cyan-300" />
+              <Moon className="relative z-10 h-5 w-5 text-blue-800 drop-shadow-sm dark:text-cyan-100" />
             ) : (
-              <Sun className="w-5 h-5 text-yellow-400" />
+              <Sun className="relative z-10 h-5 w-5 text-blue-800 drop-shadow-sm dark:text-cyan-100" />
             )}
           </button>
 
@@ -132,9 +133,10 @@ export function TopNav() {
           <div className="relative" ref={notificationsRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-10 h-10 rounded-xl aero-glass flex items-center justify-center transition-all hover:scale-110 relative"
+              className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/70 bg-gradient-to-b from-cyan-100 via-sky-200 to-blue-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.18),0_3px_0_rgba(14,116,144,0.42),0_10px_20px_rgba(14,165,233,0.26)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.2),0_5px_0_rgba(14,116,144,0.42),0_14px_24px_rgba(14,165,233,0.34)] dark:border-cyan-200/45 dark:from-cyan-700 dark:via-sky-800 dark:to-blue-950"
             >
-              <Bell className="w-5 h-5 text-cyan-600 dark:text-cyan-300" />
+              <span className="absolute inset-x-1 top-1 h-1/2 rounded-full bg-gradient-to-b from-white/75 to-transparent dark:from-cyan-100/25" />
+              <Bell className="relative z-10 h-5 w-5 text-blue-800 drop-shadow-sm dark:text-cyan-100" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-red-400 to-red-600 text-white text-xs rounded-full flex items-center justify-center shadow-lg shadow-red-500/50 border-2 border-white/50">
                   {unreadCount}
@@ -204,9 +206,10 @@ export function TopNav() {
               setShowNotifications(false);
               setShowSettings(true);
             }}
-            className="w-10 h-10 rounded-xl aero-glass flex items-center justify-center transition-all hover:scale-110"
+            className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/70 bg-gradient-to-b from-cyan-100 via-sky-200 to-blue-300 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.18),0_3px_0_rgba(14,116,144,0.42),0_10px_20px_rgba(14,165,233,0.26)] transition hover:-translate-y-0.5 hover:shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_-2px_0_rgba(14,116,144,0.2),0_5px_0_rgba(14,116,144,0.42),0_14px_24px_rgba(14,165,233,0.34)] dark:border-cyan-200/45 dark:from-cyan-700 dark:via-sky-800 dark:to-blue-950"
           >
-            <Settings className="w-5 h-5 text-cyan-600 dark:text-cyan-300" />
+            <span className="absolute inset-x-1 top-1 h-1/2 rounded-full bg-gradient-to-b from-white/75 to-transparent dark:from-cyan-100/25" />
+            <Settings className="relative z-10 h-5 w-5 text-blue-800 drop-shadow-sm dark:text-cyan-100" />
           </button>
 
           {/* User Profile */}

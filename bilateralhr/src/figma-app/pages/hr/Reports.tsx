@@ -18,20 +18,23 @@ import {
   YAxis,
 } from 'recharts';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { fetchHrReports, subscribeToDataChanges } from '../../utils/data';
 import type { HRReports } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
 
 const colors = ['#22d3ee', '#38bdf8', '#34d399', '#f59e0b', '#fb7185', '#818cf8', '#14b8a6', '#a3e635'];
 const tooltipStyle = {
   borderRadius: '16px',
-  border: '1px solid rgba(125, 211, 252, 0.45)',
-  background: 'rgba(255, 255, 255, 0.92)',
+  border: '1px solid var(--hr-report-tooltip-border)',
+  background: 'var(--hr-report-tooltip-bg)',
   boxShadow: '0 18px 45px rgba(8, 145, 178, 0.18)',
-  color: '#164e63',
+  color: 'var(--hr-report-chart-text)',
 };
 
 export function Reports() {
   const { t, formatDate } = useLanguage();
+  const { formatMoney } = useCurrency();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [reports, setReports] = useState<HRReports | null>(null);
@@ -82,46 +85,46 @@ export function Reports() {
   const overtimeMonthly = (reports?.overtimeMonthly ?? []).map((item) => ({ ...item, label: monthLabel(item.month) }));
   const absencesMonthly = (reports?.absencesMonthly ?? []).map((item) => ({ ...item, label: monthLabel(item.month) }));
   const salaryStats = reports?.salaryStats;
+  const compactMoney = (value: number) => formatMoney(value, { compact: true, maximumFractionDigits: 1 });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 bg-clip-text text-3xl font-black text-transparent dark:from-cyan-300 dark:via-sky-300 dark:to-blue-300">
-          {t('reports')}
-        </h1>
-        <select
-          value={year}
-          onChange={(event) => setYear(Number(event.target.value))}
-          className="aero-input w-full cursor-pointer font-black sm:w-40"
-        >
-          {yearOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-        </select>
-      </div>
-
-      {loading || !reports ? (
-        <div className="aero-glass flex min-h-80 items-center justify-center rounded-3xl text-lg font-black text-cyan-800 dark:text-cyan-100">
-          {t('loading')}
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('reports')} description={t('hrReportsInfo')} />
+      <section className="aero-glass hr-report-shell rounded-[2rem] border border-white/50 bg-white/35 p-5 shadow-xl shadow-cyan-500/20 backdrop-blur-xl dark:bg-cyan-950/20 sm:p-6">
+        <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <select
+            value={year}
+            onChange={(event) => setYear(Number(event.target.value))}
+            className="aero-input w-full cursor-pointer font-black sm:w-40"
+          >
+            {yearOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
         </div>
-      ) : (
-        <>
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard label={t('minimumSalary')} gross={salaryStats?.minGross ?? 0} net={salaryStats?.minNet ?? 0} />
-            <StatCard label={t('medianSalary')} gross={salaryStats?.medianGross ?? 0} net={salaryStats?.medianNet ?? 0} />
-            <StatCard label={t('maximumSalary')} gross={salaryStats?.maxGross ?? 0} net={salaryStats?.maxNet ?? 0} />
-          </div>
 
-          <div className="grid gap-5 xl:grid-cols-2">
-            <ChartCard title={t('monthlyNewHires')}>
-              <ResponsiveContainer width="100%" height={270}>
-                <BarChart data={monthlyNewHires}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(14, 165, 233, 0.18)" />
-                  <XAxis dataKey="label" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="hires" name={t('newHires')} fill="#22d3ee" radius={[12, 12, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+        {loading || !reports ? (
+          <div className="aero-glass flex min-h-80 items-center justify-center rounded-3xl text-lg font-black text-cyan-800 dark:text-cyan-100">
+            {t('loading')}
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-3">
+              <StatCard label={t('minimumSalary')} gross={salaryStats?.minGross ?? 0} net={salaryStats?.minNet ?? 0} formatMoney={formatMoney} />
+              <StatCard label={t('medianSalary')} gross={salaryStats?.medianGross ?? 0} net={salaryStats?.medianNet ?? 0} formatMoney={formatMoney} />
+              <StatCard label={t('maximumSalary')} gross={salaryStats?.maxGross ?? 0} net={salaryStats?.maxNet ?? 0} formatMoney={formatMoney} />
+            </div>
+
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
+              <ChartCard title={t('monthlyNewHires')}>
+                <ResponsiveContainer width="100%" height={270}>
+                  <BarChart data={monthlyNewHires}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(14, 165, 233, 0.18)" />
+                    <XAxis dataKey="label" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="hires" name={t('newHires')} fill="#22d3ee" radius={[12, 12, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
 
             <ChartCard title={t('employeeTotalEvolution')}>
               <ResponsiveContainer width="100%" height={270}>
@@ -290,7 +293,7 @@ export function Reports() {
             </ChartCard>
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-2">
+          <div className="mt-5 grid gap-5 xl:grid-cols-2">
             <TableCard title={t('leaveDaysRemaining')}>
               <ReportTable
                 headers={[t('employee'), t('employeeCode'), t('used'), t('remaining')]}
@@ -314,8 +317,9 @@ export function Reports() {
               />
             </TableCard>
           </div>
-        </>
-      )}
+          </>
+        )}
+      </section>
     </div>
   );
 }
@@ -338,9 +342,9 @@ function TableCard({ title, children }: { title: string; children: ReactNode }) 
   );
 }
 
-function StatCard({ label, gross, net }: { label: string; gross: number; net: number }) {
+function StatCard({ label, gross, net, formatMoney }: { label: string; gross: number; net: number; formatMoney: (value: number) => string }) {
   return (
-    <div className="rounded-3xl border-2 border-white/65 bg-gradient-to-br from-white/75 via-cyan-100/55 to-blue-200/45 p-5 shadow-xl shadow-cyan-500/15 dark:border-cyan-400/25 dark:from-cyan-950/75 dark:via-blue-950/55 dark:to-slate-950/45">
+    <div className="rounded-3xl border-2 border-white/75 bg-gradient-to-br from-white/95 via-cyan-100/90 to-blue-200/80 p-5 shadow-xl shadow-cyan-500/20 dark:border-cyan-300/35 dark:from-slate-900/95 dark:via-cyan-950/95 dark:to-blue-950/90 dark:shadow-cyan-950/45">
       <p className="text-sm font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{label}</p>
       <p className="mt-3 text-2xl font-black text-cyan-950 dark:text-cyan-50">{formatMoney(gross)}</p>
       <p className="mt-1 font-bold text-emerald-700 dark:text-emerald-300">{formatMoney(net)}</p>
@@ -383,16 +387,6 @@ function requestTypeLabel(type: string, t: (key: string) => string) {
   if (type === 'salary_raise') return t('salaryRaise');
   if (type === 'other' || type === 'complaint') return t('hrMessage');
   return type;
-}
-
-function formatMoney(value: number) {
-  return `$${Math.round(value).toLocaleString()}`;
-}
-
-function compactMoney(value: number) {
-  if (Math.abs(value) >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(value) >= 1_000) return `$${Math.round(value / 1_000)}K`;
-  return `$${value}`;
 }
 
 function formatNumber(value: number) {

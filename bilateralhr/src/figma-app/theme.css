@@ -188,6 +188,7 @@
     border: 2px solid rgba(255, 255, 255, 0.5);
     border-top-color: rgba(255, 255, 255, 0.8);
     border-left-color: rgba(255, 255, 255, 0.8);
+    border-radius: 1.5rem;
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.1),
       0 1px 0 rgba(255, 255, 255, 0.8) inset,
@@ -225,6 +226,7 @@
     background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-top-color: rgba(255, 255, 255, 0.6);
+    border-radius: 1rem;
     box-shadow:
       0 8px 20px rgba(14, 165, 233, 0.4),
       0 1px 0 rgba(255, 255, 255, 0.5) inset,
@@ -257,6 +259,7 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.8) 100%);
     border: 2px solid rgba(56, 189, 248, 0.3);
     border-bottom-color: rgba(56, 189, 248, 0.5);
+    border-radius: 1rem;
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.05),
       0 1px 0 rgba(255, 255, 255, 0.8) inset,
@@ -310,6 +313,42 @@
   .dark ::-webkit-scrollbar-track {
     background: linear-gradient(180deg, rgba(3, 105, 161, 0.3) 0%, rgba(7, 89, 133, 0.2) 100%);
   }
+}
+
+:root {
+  --hr-report-chart-text: #155e75;
+  --hr-report-grid: rgba(14, 116, 144, 0.22);
+  --hr-report-tooltip-bg: rgba(255, 255, 255, 0.96);
+  --hr-report-tooltip-border: rgba(125, 211, 252, 0.55);
+}
+
+.dark {
+  --hr-report-chart-text: #dff9ff;
+  --hr-report-grid: rgba(165, 243, 252, 0.28);
+  --hr-report-tooltip-bg: rgba(8, 47, 73, 0.96);
+  --hr-report-tooltip-border: rgba(125, 211, 252, 0.42);
+}
+
+:where(input:not([type='checkbox']):not([type='radio']), textarea, select, button, [role='button'], table, img) {
+  border-radius: 0.875rem;
+}
+
+.hr-report-shell .recharts-cartesian-axis-tick-value,
+.hr-report-shell .recharts-text,
+.hr-report-shell .recharts-label {
+  fill: var(--hr-report-chart-text);
+}
+
+.hr-report-shell .recharts-legend-item-text {
+  color: var(--hr-report-chart-text) !important;
+}
+
+.hr-report-shell .recharts-cartesian-grid line {
+  stroke: var(--hr-report-grid);
+}
+
+.hr-report-shell .recharts-pie-label-text {
+  fill: var(--hr-report-chart-text);
 }
 
 .aero-input {
@@ -388,4 +427,38 @@
 .dark .aero-glass textarea:not(.aero-input)::placeholder {
   color: #9cc7d9;
   opacity: 1;
+}
+
+.aero-department-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  max-width: 14rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: rgba(255, 255, 255, 0.72);
+  background: linear-gradient(135deg, #60d8ff 0%, #22b8f0 42%, #0a82cf 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.58),
+    inset 0 -1px 0 rgba(3, 105, 161, 0.28),
+    0 8px 18px rgba(14, 165, 233, 0.34);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0.45rem 0.85rem;
+  text-shadow: 0 1px 1px rgba(7, 89, 133, 0.42);
+}
+
+.dark .aero-department-badge {
+  border-color: rgba(224, 242, 254, 0.38);
+  border-top-color: rgba(224, 242, 254, 0.62);
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 44%, #075985 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(224, 242, 254, 0.34),
+    inset 0 -1px 0 rgba(3, 7, 18, 0.28),
+    0 8px 18px rgba(56, 189, 248, 0.28);
+  color: #e0f2fe;
+  text-shadow: 0 1px 1px rgba(3, 7, 18, 0.45);
 }

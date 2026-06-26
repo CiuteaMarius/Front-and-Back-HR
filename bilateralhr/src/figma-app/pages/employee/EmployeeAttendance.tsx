@@ -14,6 +14,8 @@ import {
   subscribeToDataChanges,
 } from '../../utils/data';
 import type { AttendanceRecord, Employee } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
 
 function localDateOnly(date = new Date()) {
   return format(date, 'yyyy-MM-dd');
@@ -26,6 +28,21 @@ function durationLabel(hours: number) {
 
 function sessionDuration(record: AttendanceRecord, now: Date) {
   return attendanceWorkedHours(record, now);
+}
+
+function localizedAttendanceError(error: unknown, t: (key: string) => string, fallbackKey: string) {
+  const message = error instanceof Error ? error.message : '';
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('already have an active attendance session')) return t('attendanceAlreadyActive');
+  if (normalized.includes('employee account is required for attendance')) return t('attendanceEmployeeRequired');
+  if (normalized.includes('normal attendance session') && normalized.includes('already recorded')) return t('attendanceNormalAlreadyRecorded');
+  if (normalized.includes('attendance session not found')) return t('attendanceSessionNotFound');
+  if (normalized.includes('already checked out automatically')) return t('attendanceAlreadyCheckedOutAutomatically');
+  if (normalized.includes('could not check in')) return t('attendanceCheckInFailed');
+  if (normalized.includes('could not check out')) return t('attendanceCheckOutFailed');
+
+  return message || t(fallbackKey);
 }
 
 export function EmployeeAttendance() {
@@ -83,7 +100,7 @@ export function EmployeeAttendance() {
     try {
       await checkInEmployee();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not check in.');
+      setMessage(localizedAttendanceError(error, t, 'attendanceCheckInFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -96,24 +113,21 @@ export function EmployeeAttendance() {
     try {
       await checkOutEmployee(activeRecord);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not check out.');
+      setMessage(localizedAttendanceError(error, t, 'attendanceCheckOutFailed'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-3xl font-black text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">{t('myAttendance')}</h1>
-        <p className="mt-1 font-semibold text-cyan-700 dark:text-cyan-300">{t('attendanceCalendar')}</p>
-      </div>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('myAttendance')} description={t('myAttendanceInfo')} />
 
       <section className="overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-xl shadow-cyan-500/20 backdrop-blur-xl dark:border-cyan-400/25 dark:bg-cyan-950/25">
         <div className="border-b border-cyan-300/30 bg-gradient-to-r from-cyan-50/80 via-blue-50/70 to-emerald-50/60 p-6 dark:border-cyan-500/20 dark:from-cyan-900/35 dark:via-blue-900/25 dark:to-emerald-900/20">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-white/70 bg-gradient-to-b from-cyan-300 via-sky-500 to-blue-700 text-white shadow-xl shadow-cyan-500/40"><Clock3 className="h-7 w-7" /></div>
+              <AeroIcon icon={Clock3} size="large" variant="cyan" />
               <div>
                 <h2 className="text-xl font-black text-cyan-900 dark:text-cyan-100">{t('attendanceToday')} - {formatDate(now, { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
                 <p className="mt-1 text-sm font-bold text-cyan-700 dark:text-cyan-300">{t('workNorm')}: {t('hoursShort', { count: employee.workNormHours ?? 8 })}</p>
@@ -140,7 +154,10 @@ export function EmployeeAttendance() {
           </div>
 
           <div className="mt-5 rounded-2xl border border-orange-200/70 bg-orange-50/55 p-4 dark:border-orange-600/35 dark:bg-orange-950/20">
-            <h3 className="flex items-center gap-2 font-black text-orange-800 dark:text-orange-100"><Sparkles className="h-4 w-4" />{t('overtimeSessions')}</h3>
+            <h3 className="flex items-center gap-2 font-black text-orange-800 dark:text-orange-100">
+              <AeroIcon icon={Sparkles} size="small" variant="cyan" />
+              {t('overtimeSessions')}
+            </h3>
             {overtimeRecords.length ? (
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 {overtimeRecords.map((record) => <SessionRow key={record.id} record={record} now={now} t={t} />)}
@@ -172,7 +189,12 @@ export function EmployeeAttendance() {
                 <div key={date} onMouseEnter={() => setHoveredDate(date)} onMouseLeave={() => setHoveredDate(null)} className={`relative min-h-24 cursor-pointer rounded-xl border p-2 shadow-sm ${dayRecords.length ? 'border-cyan-300/70 bg-gradient-to-b from-white/75 to-cyan-50/65 dark:border-cyan-500/35 dark:from-cyan-900/40 dark:to-blue-950/30' : 'border-cyan-200/35 bg-white/25 dark:border-cyan-700/25 dark:bg-cyan-950/15'} ${isToday ? 'ring-2 ring-cyan-500 shadow-lg shadow-cyan-500/40 dark:border-cyan-100 dark:bg-cyan-700/45 dark:ring-cyan-200 dark:shadow-cyan-300/60' : ''}`}>
                   <p className={`font-black ${isToday ? 'text-cyan-900 dark:text-white' : 'text-cyan-800 dark:text-cyan-100'}`}>{format(day, 'd')}</p>
                   {normal ? <p className="mt-2 text-[11px] font-black text-cyan-700 dark:text-cyan-200">{durationLabel(sessionDuration(normal, now))}</p> : null}
-                  {overtime.length ? <p className="mt-1 flex items-center gap-1 text-[11px] font-black text-orange-600 dark:text-orange-300"><Sparkles className="h-3 w-3" />{overtime.length} / {durationLabel(overtime.reduce((total, record) => total + sessionDuration(record, now), 0))}</p> : null}
+                  {overtime.length ? (
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-black text-orange-600 dark:text-orange-300">
+                      <AeroIcon icon={Sparkles} size="small" variant="amber" className="!h-7 !w-7" />
+                      {overtime.length} / {durationLabel(overtime.reduce((total, record) => total + sessionDuration(record, now), 0))}
+                    </p>
+                  ) : null}
                   {hoveredDate === date ? <DayTooltip day={day} records={dayRecords} now={now} formatDate={formatDate} t={t} /> : null}
                 </div>
               );

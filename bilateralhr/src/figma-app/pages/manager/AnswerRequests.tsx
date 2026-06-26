@@ -9,6 +9,11 @@ import { fetchEmployees, fetchLeaveDays, fetchRequests, proposeRequestDates, sub
 import { findLeaveDateOverlap, getLeaveDates } from '../../utils/leaveRules';
 import type { LeaveDay, Request } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
+
+type RequestTypeFilter = Request['type'] | 'all';
+const requestTypeFilterOptions: RequestTypeFilter[] = ['all', 'paid-leave', 'medical-leave', 'salary-raise', 'hr-message'];
 
 function getDateRange(startDate?: string, endDate?: string) {
   if (!startDate) return [];
@@ -58,6 +63,8 @@ export function AnswerRequests() {
   const [allRequests, setAllRequests] = useState<Request[]>([]);
   const [calendarError, setCalendarError] = useState('');
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [pendingTypeFilter, setPendingTypeFilter] = useState<RequestTypeFilter>('all');
+  const [processedTypeFilter, setProcessedTypeFilter] = useState<RequestTypeFilter>('all');
 
   useEffect(() => {
     const loadData = async () => {
@@ -181,20 +188,27 @@ export function AnswerRequests() {
     return leaveDays.some((leave) => leave.date === dateStr && leave.type === 'medical');
   };
 
-  const pendingRequests = requests
-    .filter(r => r.status === 'pending')
+  const filterByType = (items: Request[], typeFilter: RequestTypeFilter) =>
+    typeFilter === 'all' ? items : items.filter((request) => request.type === typeFilter);
+  const pendingRequests = filterByType(
+    requests.filter(r => r.status === 'pending'),
+    pendingTypeFilter,
+  )
     .sort((first, second) =>
       highlightedRequestId
         ? first.id === highlightedRequestId ? -1 : second.id === highlightedRequestId ? 1 : 0
         : 0,
     );
-  const processedRequests = requests
-    .filter((request) => request.status !== 'pending')
+  const processedRequests = filterByType(
+    requests.filter((request) => request.status !== 'pending'),
+    processedTypeFilter,
+  )
     .sort((first, second) => new Date(second.submittedDate).getTime() - new Date(first.submittedDate).getTime());
   const isCounterProposal = !sameDates(selectedDates, originalRequestedDates);
   const requestTypeLabel = (type: Request['type']) => {
     if (type === 'medical-leave') return t('medicalLeave');
     if (type === 'paid-leave') return t('paidLeave');
+    if (type === 'hr-message') return t('hrMessage');
     return t('salaryRaise');
   };
   const statusLabel = (status: Request['status']) => {
@@ -212,22 +226,34 @@ export function AnswerRequests() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-4xl font-bold text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">
-          {t('leaveManagement')}
-        </h1>
-      </div>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('leaveManagement')} description={t('answerRequestsInfo')} />
 
       <div className="aero-glass overflow-hidden rounded-2xl">
         <div className="border-b-2 border-cyan-300/30 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 p-6 dark:border-cyan-500/20 dark:from-cyan-900/20 dark:to-blue-900/20">
-          <h2 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-2xl font-bold text-transparent dark:from-cyan-300 dark:to-blue-300">{t('pendingRequests')}</h2>
-          <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{t('requestsAwaitingReview', { count: pendingRequests.length })}</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-2xl font-bold text-transparent dark:from-cyan-300 dark:to-blue-300">{t('pendingRequests')}</h2>
+              <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{t('requestsAwaitingReview', { count: pendingRequests.length })}</p>
+            </div>
+            <select
+              value={pendingTypeFilter}
+              onChange={(event) => setPendingTypeFilter(event.target.value as RequestTypeFilter)}
+              className="aero-input w-full rounded-xl px-4 py-2 text-cyan-900 dark:text-cyan-100 sm:w-56"
+              aria-label={t('requestTypeFilter')}
+            >
+              {requestTypeFilterOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type === 'all' ? t('all') : requestTypeLabel(type)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="divide-y divide-cyan-200/30 dark:divide-cyan-700/20">
           {pendingRequests.length === 0 ? (
             <div className="p-8 text-center">
-              <Calendar className="mx-auto mb-3 h-12 w-12 text-cyan-400 dark:text-cyan-600" />
+              <AeroIcon icon={Calendar} variant="cyan" className="mx-auto mb-4" />
               <p className="font-semibold text-cyan-700 dark:text-cyan-300">{t('noPendingRequests')}</p>
             </div>
           ) : (
@@ -277,14 +303,28 @@ export function AnswerRequests() {
 
       <div className="aero-glass overflow-hidden rounded-2xl">
         <div className="border-b-2 border-cyan-300/30 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 p-6 dark:border-cyan-500/20 dark:from-cyan-900/20 dark:to-blue-900/20">
-          <h2 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-2xl font-bold text-transparent dark:from-cyan-300 dark:to-blue-300">
-            {t('processedRequests')}
-          </h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-2xl font-bold text-transparent dark:from-cyan-300 dark:to-blue-300">
+              {t('processedRequests')}
+            </h2>
+            <select
+              value={processedTypeFilter}
+              onChange={(event) => setProcessedTypeFilter(event.target.value as RequestTypeFilter)}
+              className="aero-input w-full rounded-xl px-4 py-2 text-cyan-900 dark:text-cyan-100 sm:w-56"
+              aria-label={t('requestTypeFilter')}
+            >
+              {requestTypeFilterOptions.map((type) => (
+                <option key={type} value={type}>
+                  {type === 'all' ? t('all') : requestTypeLabel(type)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="max-h-96 divide-y divide-cyan-200/30 overflow-y-auto dark:divide-cyan-700/20">
           {processedRequests.length === 0 ? (
             <div className="p-8 text-center">
-              <Calendar className="mx-auto mb-3 h-12 w-12 text-cyan-400 dark:text-cyan-600" />
+              <AeroIcon icon={Calendar} variant="emerald" className="mx-auto mb-4" />
               <p className="font-semibold text-cyan-700 dark:text-cyan-300">{t('noProcessedRequests')}</p>
             </div>
           ) : (

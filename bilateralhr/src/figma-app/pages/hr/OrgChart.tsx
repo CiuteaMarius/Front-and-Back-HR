@@ -3,6 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { buildOrgTreeEmployees, fetchDepartments, subscribeToDataChanges } from '../../utils/data';
 import type { Department, Employee } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { PageInfoButton } from '../../components/PageInfoButton';
 
 type OrgNode = {
   employee: Employee;
@@ -83,7 +84,7 @@ export function OrgChart() {
     return (
       <div className="flex flex-col items-center" style={{ width }}>
         <div className="relative w-[280px] rounded-2xl border-2 border-white/70 bg-white/75 p-5 pt-7 shadow-xl shadow-cyan-500/30 backdrop-blur-xl dark:border-cyan-400/40 dark:bg-cyan-950/55">
-          <div className="absolute -top-4 left-1/2 z-20 max-w-[240px] -translate-x-1/2 rounded-full border-2 border-white/70 bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-1 text-center text-xs font-bold text-white shadow-xl shadow-cyan-500/50">
+          <div className="aero-department-badge absolute -top-4 left-1/2 z-20 max-w-[240px] -translate-x-1/2 justify-center">
             <span className="block truncate">{departmentLabel(node.employee)}</span>
           </div>
           <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/75 to-transparent"></div>
@@ -130,13 +131,8 @@ export function OrgChart() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">
-          {t('orgChart')}
-        </h1>
-        <p className="mt-1 font-medium text-cyan-700 dark:text-cyan-300">{t('generateOrgChartDescription')}</p>
-      </div>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('orgChart')} description={t('orgChartInfo')} />
 
       <div className="aero-glass space-y-4 p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

@@ -9,6 +9,7 @@ import {
   departmentIconCatalog,
   getDepartmentIcon,
 } from '../../utils/departmentIcons';
+import { AeroIcon } from '../../components/AeroIcon';
 import {
   addDepartment,
   deleteDepartment,
@@ -17,6 +18,7 @@ import {
   subscribeToDataChanges,
   updateDepartmentIcon,
 } from '../../utils/data';
+import { PageInfoButton } from '../../components/PageInfoButton';
 
 type IconPickerTarget = Department | 'new' | null;
 
@@ -102,78 +104,74 @@ export function ManageDepartments() {
   };
 
   return (
-    <div className="max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-3xl font-bold text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">
-            {t('departments')}
-          </h1>
-          <p className="mt-1 font-medium text-cyan-700 dark:text-cyan-300">{t('manageCompanyDepartments')}</p>
+    <div className="relative max-w-6xl space-y-6 pt-14">
+      <PageInfoButton title={t('departments')} description={t('departmentsInfo')} />
+      <section className="aero-glass overflow-visible rounded-[2rem] border border-white/50 bg-white/35 p-5 shadow-xl shadow-cyan-500/20 backdrop-blur-xl dark:bg-cyan-950/20 sm:p-6">
+        <div className="flex flex-wrap items-center justify-end gap-4">
+          <button
+            type="button"
+            onClick={() => setShowAddForm((current) => !current)}
+            className="relative flex items-center gap-2 overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-cyan-400 to-blue-600 px-6 py-3 font-bold text-white shadow-xl shadow-cyan-500/50 transition-all hover:scale-105"
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-50" />
+            <Plus className="relative z-10 h-5 w-5" />
+            <span className="relative z-10">{t('addDepartment')}</span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAddForm((current) => !current)}
-          className="relative flex items-center gap-2 overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-cyan-400 to-blue-600 px-6 py-3 font-bold text-white shadow-xl shadow-cyan-500/50 transition-all hover:scale-105"
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-50" />
-          <Plus className="relative z-10 h-5 w-5" />
-          <span className="relative z-10">{t('addDepartment')}</span>
-        </button>
-      </div>
 
-      {showAddForm ? (
-        <div className="aero-glass p-6">
-          <form onSubmit={handleAddDepartment} className="flex flex-col gap-4 md:flex-row md:items-center">
-            <input
-              type="text"
-              value={newDeptName}
-              onChange={(event) => setNewDeptName(event.target.value)}
-              placeholder={t('departmentName')}
-              className="aero-input min-w-0 flex-1 text-black placeholder:text-black dark:text-cyan-100 dark:placeholder:text-cyan-200"
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={() => setIconPickerTarget('new')}
-              className="flex min-w-64 items-center gap-3 rounded-xl border-2 border-cyan-300/60 bg-white/65 px-3 py-2 text-left shadow-lg shadow-cyan-600/15 transition hover:-translate-y-0.5 hover:bg-white/85 dark:border-cyan-500/30 dark:bg-cyan-950/45 dark:hover:bg-cyan-900/60"
-            >
-              <IconPedestal iconKey={selectedNewIcon.key} size="small" />
-              <span>
-                <span className="block text-xs font-bold uppercase tracking-wide text-cyan-600 dark:text-cyan-300">{t('selectedDepartmentIcon')}</span>
-                <span className="block font-black text-cyan-950 dark:text-white">{selectedNewIcon.label}</span>
-              </span>
-            </button>
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                className="relative overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-green-400 to-green-600 px-6 py-3 font-bold text-white shadow-xl shadow-green-500/50 transition-all hover:scale-105"
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-50" />
-                <span className="relative z-10">{t('add')}</span>
-              </button>
+        {showAddForm ? (
+          <div className="aero-glass mt-5 rounded-3xl p-6">
+            <form onSubmit={handleAddDepartment} className="flex flex-col gap-4 md:flex-row md:items-center">
+              <input
+                type="text"
+                value={newDeptName}
+                onChange={(event) => setNewDeptName(event.target.value)}
+                placeholder={t('departmentName')}
+                className="aero-input min-w-0 flex-1 text-black placeholder:text-black dark:text-cyan-100 dark:placeholder:text-cyan-200"
+                autoFocus
+              />
               <button
                 type="button"
-                onClick={closeAddForm}
-                className="relative overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-slate-300 to-slate-500 px-6 py-3 font-bold text-white shadow-xl shadow-slate-500/40 transition-all hover:scale-105"
+                onClick={() => setIconPickerTarget('new')}
+                className="flex min-w-64 items-center gap-3 rounded-xl border-2 border-cyan-300/60 bg-white/65 px-3 py-2 text-left shadow-lg shadow-cyan-600/15 transition hover:-translate-y-0.5 hover:bg-white/85 dark:border-cyan-500/30 dark:bg-cyan-950/45 dark:hover:bg-cyan-900/60"
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-white/35 to-transparent opacity-50" />
-                <span className="relative z-10">{t('cancel')}</span>
+                <IconPedestal iconKey={selectedNewIcon.key} size="small" />
+                <span>
+                  <span className="block text-xs font-bold uppercase tracking-wide text-cyan-600 dark:text-cyan-300">{t('selectedDepartmentIcon')}</span>
+                  <span className="block font-black text-cyan-950 dark:text-white">{selectedNewIcon.label}</span>
+                </span>
               </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="relative overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-green-400 to-green-600 px-6 py-3 font-bold text-white shadow-xl shadow-green-500/50 transition-all hover:scale-105"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent opacity-50" />
+                  <span className="relative z-10">{t('add')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={closeAddForm}
+                  className="relative overflow-hidden rounded-xl border-2 border-white/40 border-t-white/60 bg-gradient-to-b from-slate-300 to-slate-500 px-6 py-3 font-bold text-white shadow-xl shadow-slate-500/40 transition-all hover:scale-105"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/35 to-transparent opacity-50" />
+                  <span className="relative z-10">{t('cancel')}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
 
-      <div className="grid grid-cols-1 gap-8 pb-10 md:grid-cols-2">
-        {departments.map((department) => {
-          const members = employeesByDepartment.get(department.id) ?? [];
-          const icon = getDepartmentIcon(department.iconKey);
+        <div className="grid grid-cols-1 gap-8 pb-10 pt-6 md:grid-cols-2">
+          {departments.map((department) => {
+            const members = employeesByDepartment.get(department.id) ?? [];
+            const icon = getDepartmentIcon(department.iconKey);
 
-          return (
-            <article
-              key={department.id}
-              className="group relative isolate rounded-[1.75rem] border-2 border-white/80 bg-gradient-to-br from-white/95 via-cyan-50/90 to-sky-200/80 p-5 shadow-[0_9px_0_#66b9ce,0_16px_0_#277999,0_24px_30px_rgba(8,82,120,0.28),inset_0_2px_0_rgba(255,255,255,0.95)] transition duration-300 hover:z-30 hover:-translate-y-1.5 hover:shadow-[0_13px_0_#66b9ce,0_21px_0_#277999,0_30px_36px_rgba(8,82,120,0.32),inset_0_2px_0_rgba(255,255,255,0.95)] dark:border-cyan-200/35 dark:from-slate-800/95 dark:via-cyan-950/95 dark:to-blue-950/95 dark:shadow-[0_9px_0_#14566e,0_16px_0_#082e48,0_24px_30px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(165,243,252,0.22)] dark:hover:shadow-[0_13px_0_#14566e,0_21px_0_#082e48,0_30px_36px_rgba(0,0,0,0.46),inset_0_2px_0_rgba(165,243,252,0.22)]"
-            >
+            return (
+              <article
+                key={department.id}
+                className="group relative isolate rounded-[1.75rem] border-2 border-white/80 bg-gradient-to-br from-white/95 via-cyan-50/90 to-sky-200/80 p-5 shadow-[0_9px_0_#66b9ce,0_16px_0_#277999,0_24px_30px_rgba(8,82,120,0.28),inset_0_2px_0_rgba(255,255,255,0.95)] transition duration-300 hover:z-30 hover:-translate-y-1.5 hover:shadow-[0_13px_0_#66b9ce,0_21px_0_#277999,0_30px_36px_rgba(8,82,120,0.32),inset_0_2px_0_rgba(255,255,255,0.95)] dark:border-cyan-200/35 dark:from-slate-800/95 dark:via-cyan-950/95 dark:to-blue-950/95 dark:shadow-[0_9px_0_#14566e,0_16px_0_#082e48,0_24px_30px_rgba(0,0,0,0.4),inset_0_2px_0_rgba(165,243,252,0.22)] dark:hover:shadow-[0_13px_0_#14566e,0_21px_0_#082e48,0_30px_36px_rgba(0,0,0,0.46),inset_0_2px_0_rgba(165,243,252,0.22)]"
+              >
               <div className="pointer-events-none absolute inset-x-5 top-2 h-8 rounded-full bg-gradient-to-b from-white/70 to-transparent blur-sm dark:from-cyan-100/10" />
               <div className="relative flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-start gap-4">
@@ -209,10 +207,11 @@ export function ManageDepartments() {
               <p className="relative mt-5 text-xs font-bold text-cyan-700/75 dark:text-cyan-300/75">{t('departmentMembersHover')}</p>
 
               <DepartmentMembersPopup department={department} members={members} />
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       {iconPickerTarget ? (
         <div
@@ -275,9 +274,7 @@ export function ManageDepartments() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-cyan-950/30 px-4 backdrop-blur-sm">
           <div className="aero-glass w-full max-w-md border-2 border-white/50 p-6 shadow-2xl shadow-cyan-500/40">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-white/40 bg-gradient-to-br from-red-400 to-red-600 shadow-xl shadow-red-500/40">
-                <Trash2 className="h-6 w-6 text-white" />
-              </div>
+              <AeroIcon icon={Trash2} variant="rose" />
               <div>
                 <h2 className="text-xl font-bold text-cyan-900 dark:text-cyan-100">{t('deleteDepartmentQuestion')}</h2>
                 <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{departmentToDelete.name}</p>
@@ -301,9 +298,7 @@ export function ManageDepartments() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-cyan-950/30 px-4 backdrop-blur-sm">
           <div className="aero-glass w-full max-w-md border-2 border-white/50 p-6 shadow-2xl shadow-cyan-500/40">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-white/40 bg-gradient-to-br from-amber-300 to-orange-500 shadow-xl shadow-orange-500/40">
-                <UsersRound className="h-6 w-6 text-white" />
-              </div>
+              <AeroIcon icon={UsersRound} variant="amber" />
               <div>
                 <h2 className="text-xl font-bold text-cyan-900 dark:text-cyan-100">{t('departmentInUse')}</h2>
                 <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300">{blockedDepartment.name}</p>

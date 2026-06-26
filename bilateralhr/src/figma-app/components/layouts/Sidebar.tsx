@@ -61,6 +61,9 @@ export function Sidebar() {
           {filteredItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            const label = user.role === 'manager' && item.path === '/employee/calendar'
+              ? t('calendar')
+              : t(item.labelKey);
 
             return (
               <Link
@@ -74,11 +77,11 @@ export function Sidebar() {
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-cyan-600 dark:text-cyan-300'}`} />
                 {!isCollapsed && (
-                  <span className="text-sm font-medium truncate">{t(item.labelKey)}</span>
+                  <span className="text-sm font-medium truncate">{label}</span>
                 )}
                 {isCollapsed && (
                   <div className="absolute left-full ml-2 px-3 py-2 aero-glass text-cyan-800 dark:text-cyan-100 text-sm font-bold rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity shadow-xl z-50">
-                    {t(item.labelKey)}
+                    {label}
                   </div>
                 )}
               </Link>

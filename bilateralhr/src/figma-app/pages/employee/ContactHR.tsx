@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { MessageCircle, Plus, Send, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { PageInfoButton } from '../../components/PageInfoButton';
 import {
   createHrMessageRequest,
   fetchRequestMessages,
@@ -118,22 +119,19 @@ export function ContactHR() {
   if (!user) return null;
 
   return (
-    <div className="grid min-h-[calc(100vh-8rem)] gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="relative grid min-h-[calc(100vh-8rem)] gap-5 pt-14 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <PageInfoButton title={t('contactHr')} description={t('contactHrInfo')} />
+
       <section className="aero-glass overflow-hidden rounded-[2rem] border-2 border-white/55 shadow-2xl shadow-cyan-500/15">
-        <div className="border-b border-cyan-200/50 bg-gradient-to-r from-cyan-50/70 to-blue-50/60 p-5 dark:border-cyan-500/20 dark:from-cyan-950/40 dark:to-blue-950/30">
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-2xl font-black text-transparent dark:from-cyan-300 dark:to-blue-300">
-              {t('contactHr')}
-            </h1>
-            <button
-              type="button"
-              onClick={() => setShowNewConversation(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-white/60 bg-gradient-to-b from-cyan-300 to-blue-600 text-white shadow-xl shadow-cyan-500/35 transition hover:scale-105"
-              aria-label={t('newConversation')}
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="flex justify-end border-b border-cyan-200/50 bg-white/25 p-3 dark:border-cyan-500/20 dark:bg-cyan-950/20">
+          <button
+            type="button"
+            onClick={() => setShowNewConversation(true)}
+            className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl border-2 border-white/60 bg-gradient-to-b from-cyan-300 to-blue-600 text-white shadow-xl shadow-cyan-500/35 transition hover:scale-105"
+            aria-label={t('newConversation')}
+          >
+            <Plus className="h-5 w-5" />
+          </button>
         </div>
 
         <div className="max-h-[calc(100vh-15rem)] overflow-y-auto p-3">

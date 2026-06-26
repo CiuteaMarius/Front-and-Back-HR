@@ -81,6 +81,7 @@ const AUTH_TOKEN_KEY = 'bilateralhr_auth_token';
 
 const localApi = createClient();
 const DATA_EVENT = 'hr-data-changed';
+const DATA_POLL_INTERVAL_MS = 5000;
 const storageKeys = {
   announcements: 'hr-local-announcements',
   notifications: 'hr-local-notifications',
@@ -128,10 +129,12 @@ export function subscribeToDataChanges(callback: () => void) {
     return () => undefined;
   }
 
+  const intervalId = window.setInterval(callback, DATA_POLL_INTERVAL_MS);
   window.addEventListener(DATA_EVENT, callback);
   window.addEventListener('storage', callback);
 
   return () => {
+    window.clearInterval(intervalId);
     window.removeEventListener(DATA_EVENT, callback);
     window.removeEventListener('storage', callback);
   };
@@ -829,6 +832,7 @@ export async function addEmployee(input: EmployeeInput) {
   }
 
   emitDataChange();
+  return payload.employee as { id: string } | undefined;
 }
 
 export async function fetchAvailableLoginAccounts(): Promise<AvailableLoginAccount[]> {
@@ -1195,6 +1199,9 @@ export async function closeHrMessageRequest(requestId: string) {
 
 export async function createRequest(input: RequestInput) {
   const dbType = appRequestTypeToDb(input.type);
+  if (input.type === 'medical-leave' && !input.documentFiles?.length && !input.documents?.length) {
+    throw new Error('medicalDocumentRequired');
+  }
   if (input.type === 'medical-leave' || input.type === 'paid-leave') {
     const currentRequests = await fetchRequests();
     const requestedDates = input.requestedDates?.length

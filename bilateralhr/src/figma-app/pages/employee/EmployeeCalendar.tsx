@@ -7,6 +7,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { fetchEmployees, fetchLeaveDays, fetchRequests, subscribeToDataChanges } from '../../utils/data';
 import { getLeaveDates } from '../../utils/leaveRules';
 import type { Employee, LeaveDay, Request } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
 
 type LeaveCalendarItem = {
   requestId: string;
@@ -49,6 +51,7 @@ export function EmployeeCalendar() {
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const leadingDays = mondayFirstLeadingDays(currentMonth);
   const isTeamView = user.role === 'manager' && calendarView === 'team';
+  const pageTitle = user.role === 'manager' ? t('calendar') : t('myCalendar');
   const directReportIds = new Set(
     employees
       .filter((employee) => employee.managerId === user.id)
@@ -124,11 +127,9 @@ export function EmployeeCalendar() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={pageTitle} description={user.role === 'manager' ? t('managerCalendarInfo') : t('myCalendarInfo')} />
       <div>
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-3xl font-bold text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">
-          {t('myCalendar')}
-        </h1>
         {user.role === 'manager' && (
           <div className="mt-4 inline-flex rounded-2xl border-2 border-white/65 bg-white/45 p-1.5 shadow-xl shadow-cyan-500/20 backdrop-blur-xl dark:border-cyan-400/25 dark:bg-cyan-950/45">
             {[
@@ -157,9 +158,7 @@ export function EmployeeCalendar() {
         <div className="border-b border-cyan-300/30 bg-gradient-to-r from-cyan-50/50 to-blue-50/50 p-6 dark:border-cyan-500/20 dark:from-cyan-900/20 dark:to-blue-900/20">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="aero-button flex h-12 w-12 items-center justify-center rounded-xl">
-                <CalendarIcon className="relative z-10 h-6 w-6 text-white" />
-              </div>
+              <AeroIcon icon={CalendarIcon} variant="cyan" />
               <div>
                 <h2 className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-xl font-bold text-transparent dark:from-cyan-300 dark:to-blue-300">
                   {formatDate(currentMonth, { month: 'long', year: 'numeric' })}

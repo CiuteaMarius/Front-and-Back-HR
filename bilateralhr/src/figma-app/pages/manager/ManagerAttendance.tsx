@@ -15,6 +15,8 @@ import {
 } from '../../utils/data';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { AttendanceRecord, Employee, EmployeeWorkSchedule, WorkTimeException } from '../../types';
+import { PageInfoButton } from '../../components/PageInfoButton';
+import { AeroIcon } from '../../components/AeroIcon';
 
 function durationLabel(hours: number) {
   const totalMinutes = Math.round(Math.max(0, hours) * 60);
@@ -137,22 +139,15 @@ export function ManagerAttendance() {
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 bg-clip-text text-3xl font-black text-transparent dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400">
-          {t('teamAttendance')}
-        </h1>
-        <p className="mt-1 font-semibold text-cyan-700 dark:text-cyan-300">{t('attendanceApproval')}</p>
-      </div>
+    <div className="relative space-y-5 pt-14">
+      <PageInfoButton title={t('teamAttendance')} description={t('teamAttendanceInfo')} />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_310px] xl:items-start">
         <section className="overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-xl shadow-cyan-500/20 backdrop-blur-xl dark:border-cyan-400/25 dark:bg-cyan-950/25">
           <div className="border-b border-cyan-300/30 bg-gradient-to-r from-cyan-50/80 via-blue-50/70 to-emerald-50/60 p-4 dark:border-cyan-500/20 dark:from-cyan-900/35 dark:via-blue-900/25 dark:to-emerald-900/20">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-white/70 bg-gradient-to-b from-cyan-300 via-sky-500 to-blue-700 text-white shadow-lg shadow-cyan-500/35">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
+                <AeroIcon icon={ShieldCheck} size="small" variant="cyan" />
                 <div>
                   <h2 className="font-black text-cyan-900 dark:text-cyan-100">{t('attendanceForDate', { date: selectedDateLabel })}</h2>
                   <p className="text-xs font-bold text-cyan-700 dark:text-cyan-300">{t('employeesCount', { count: filteredEmployees.length })}</p>

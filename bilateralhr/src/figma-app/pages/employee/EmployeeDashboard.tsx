@@ -4,17 +4,15 @@ import { Link } from 'react-router';
 import { BadgeCheck, Briefcase, Camera, Clock, CreditCard, FileSpreadsheet, FileText, IdCard, Pencil, Save, Trash2, Upload, User, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { fetchAnnualLeaveBalance, fetchEmployees, subscribeToDataChanges, updateEmployee } from '../../utils/data';
 import type { AnnualLeaveBalance } from '../../utils/data';
 import type { Employee } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { greetingKeyForCurrentTime } from '../../utils/greeting';
+import { AeroIcon } from '../../components/AeroIcon';
 
 type EditableField = 'phone' | 'address';
-
-const formatMoney = (value?: number) => (
-  value === undefined || Number.isNaN(value) ? 'N/A' : `$${value.toLocaleString()}`
-);
 
 const formatValue = (value?: string | number | null) => (
   value === undefined || value === null || value === '' ? 'N/A' : String(value)
@@ -27,6 +25,7 @@ const defaultProfilePicture = () => {
 export function EmployeeDashboard() {
   const { user } = useAuth();
   const { t, formatDate } = useLanguage();
+  const { formatMoney } = useCurrency();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [annualLeaveBalance, setAnnualLeaveBalance] = useState<AnnualLeaveBalance | null>(null);
   const [showPersonalInfo, setShowPersonalInfo] = useState(false);
@@ -188,8 +187,8 @@ export function EmployeeDashboard() {
     { label: t('status'), value: t(profile.status), icon: BadgeCheck },
     { label: t('position'), value: profile.position, icon: Briefcase },
     { label: t('workNorm'), value: profile.workNormHours === undefined ? t('notAvailable') : t('hoursPerDay', { hours: profile.workNormHours }), icon: Clock },
-    { label: t('grossSalary'), value: formatMoney(profile.salaryGross).replace('N/A', t('notAvailable')), icon: CreditCard },
-    { label: t('netSalary'), value: formatMoney(profile.salaryNet).replace('N/A', t('notAvailable')), icon: CreditCard },
+    { label: t('grossSalary'), value: formatMoney(profile.salaryGross, { fallback: t('notAvailable') }), icon: CreditCard },
+    { label: t('netSalary'), value: formatMoney(profile.salaryNet, { fallback: t('notAvailable') }), icon: CreditCard },
     { label: t('contractType'), value: profile.contractType, icon: FileText },
   ];
 
@@ -221,7 +220,7 @@ export function EmployeeDashboard() {
           {mainCards.map(({ label, value, icon: Icon }) => (
             <div key={label} className="rounded-xl border border-cyan-300/40 bg-white/40 p-3 dark:bg-cyan-900/20">
               <div className="flex items-center gap-3">
-                <Icon className="h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-300" />
+                <AeroIcon icon={Icon} size="small" variant="cyan" />
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-cyan-800 dark:text-cyan-200">{label}</p>
                   <p className="truncate text-base font-semibold text-cyan-900 dark:text-cyan-100">{value}</p>
@@ -237,7 +236,7 @@ export function EmployeeDashboard() {
             className="w-full cursor-pointer rounded-xl border border-cyan-300/40 bg-white/50 p-3 text-left shadow-sm transition hover:border-cyan-300/80 hover:bg-white/75 hover:shadow-lg hover:shadow-cyan-500/20 dark:bg-cyan-900/30 dark:hover:bg-cyan-900/45 sm:col-span-2"
           >
             <div className="flex items-center gap-3">
-              <IdCard className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+              <AeroIcon icon={IdCard} size="small" variant="amber" />
               <div>
                 <p className="text-base font-bold text-cyan-900 dark:text-cyan-100">{t('personalInformation')}</p>
                 <p className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">
@@ -253,7 +252,7 @@ export function EmployeeDashboard() {
               className="w-full cursor-pointer rounded-xl border border-cyan-300/40 bg-gradient-to-br from-white/60 via-cyan-100/60 to-blue-200/55 p-3 text-left shadow-sm transition hover:border-cyan-300/80 hover:bg-white/80 hover:shadow-lg hover:shadow-cyan-500/20 dark:border-cyan-500/25 dark:from-cyan-950/55 dark:via-blue-950/35 dark:to-slate-950/40 sm:col-span-2"
             >
               <div className="flex items-center gap-3">
-                <FileSpreadsheet className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+                <AeroIcon icon={FileSpreadsheet} size="small" variant="emerald" />
                 <div>
                   <p className="text-base font-bold text-cyan-900 dark:text-cyan-100">{t('teamReports')}</p>
                   <p className="text-xs font-semibold text-cyan-700 dark:text-cyan-300">{t('downloadExcel')}</p>

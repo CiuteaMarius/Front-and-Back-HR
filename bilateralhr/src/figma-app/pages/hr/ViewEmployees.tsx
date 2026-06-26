@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Search, Filter, Edit, FileText, UserX, Save, Eye, Copy, CalendarClock } from 'lucide-react';
 import { attachEmployeeLoginAccount, fetchAvailableLoginAccounts, fetchDepartments, fetchEmployees, splitEmployeeName, subscribeToDataChanges, terminateEmployee, updateEmployee } from '../../utils/data';
 import type { AvailableLoginAccount } from '../../utils/data';
@@ -7,6 +8,7 @@ import type { Department, Employee } from '../../types';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { EmployeeScheduleModal } from '../../components/EmployeeScheduleModal';
 import { EmployeeDocumentsModal } from '../../components/EmployeeDocumentsModal';
+import { PageInfoButton } from '../../components/PageInfoButton';
 
 type EditForm = {
   firstName: string;
@@ -29,6 +31,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function ViewEmployees() {
   const { t, formatDate } = useLanguage();
+  const { formatMoney, toDisplayCurrency, toBaseCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [salaryMin, setSalaryMin] = useState('');
@@ -85,13 +88,20 @@ export function ViewEmployees() {
     return subscribeToDataChanges(loadData);
   }, []);
 
+  const salaryMinBase = salaryMin ? toBaseCurrency(Number(salaryMin)) : undefined;
+  const salaryMaxBase = salaryMax ? toBaseCurrency(Number(salaryMax)) : undefined;
+  const editableMoneyValue = (amount: number) => {
+    const value = toDisplayCurrency(amount);
+    return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, '');
+  };
+
   const filteredEmployees = employees.filter(emp => {
     const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          emp.id.includes(searchQuery) ||
                          (emp.employeeCode ?? '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDept = !selectedDepartment || emp.department === selectedDepartment;
-    const matchesSalary = (!salaryMin || emp.salary >= parseInt(salaryMin)) &&
-                         (!salaryMax || emp.salary <= parseInt(salaryMax));
+    const matchesSalary = (salaryMinBase === undefined || emp.salary >= salaryMinBase) &&
+                         (salaryMaxBase === undefined || emp.salary <= salaryMaxBase);
     return matchesSearch && matchesDept && matchesSalary;
   });
 
@@ -128,7 +138,7 @@ export function ViewEmployees() {
       departmentId,
       position: employee.position ?? '',
       status: employee.status === 'default' ? 'active' : employee.status,
-      salaryGross: String(employee.salary),
+      salaryGross: editableMoneyValue(employee.salary),
       salaryTaxRate: inferredTaxRate,
       workNormHours: String(employee.workNormHours ?? 8),
       hireDate: employee.hireDate.slice(0, 10),
@@ -227,8 +237,8 @@ export function ViewEmployees() {
         : {}),
       position: editForm.position.trim(),
       status: editForm.status as 'active' | 'fired' | 'suspended',
-      salaryGross: Number(editForm.salaryGross),
-      salaryNet: Math.round(editSalaryNet * 100) / 100,
+      salaryGross: toBaseCurrency(Number(editForm.salaryGross)),
+      salaryNet: toBaseCurrency(Math.round(editSalaryNet * 100) / 100),
       workNormHours: Number(editForm.workNormHours),
       hireDate: editForm.hireDate,
       annualLeaveDays: Number(editForm.annualLeaveDays),
@@ -249,19 +259,15 @@ export function ViewEmployees() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-500 via-blue-500 to-blue-600 dark:from-cyan-300 dark:via-blue-300 dark:to-blue-400 bg-clip-text text-transparent">
-          {t('viewEmployees')}
-        </h1>
-        <p className="text-cyan-700 dark:text-cyan-300 font-medium mt-1">{t('manageAndViewEmployees')}</p>
-      </div>
+    <div className="relative space-y-6 pt-14">
+      <PageInfoButton title={t('viewEmployees')} description={t('viewEmployeesInfo')} />
+      <section className="space-y-5 rounded-[2rem] border border-white/45 bg-white/20 p-4 shadow-2xl shadow-cyan-900/10 backdrop-blur-md dark:border-cyan-300/20 dark:bg-cyan-950/18 sm:p-5">
 
       {/* Filters */}
       <div className="aero-glass p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="aero-button">
-            <Filter className="w-5 h-5 text-cyan-600 dark:text-cyan-300 shadow-xl shadow-cyan-500/50" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/75 bg-gradient-to-b from-white/90 via-cyan-100/85 to-sky-400/80 shadow-lg shadow-cyan-500/25 dark:border-cyan-200/35 dark:from-cyan-100/25 dark:via-cyan-500/45 dark:to-blue-700/75">
+            <Filter className="w-5 h-5 text-cyan-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.75)] dark:text-cyan-50" />
           </div>
           <h3 className="font-bold text-cyan-800 dark:text-cyan-200">{t('filters')}</h3>
         </div>
@@ -352,7 +358,7 @@ export function ViewEmployees() {
                     </div>
                   </td>
                   <td className="px-3 py-4">
-                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-400 to-cyan-500 border-2 border-white/40 text-white text-xs font-bold shadow-lg">
+                    <span className="aero-department-badge">
                       {departmentLabel(employee)}
                     </span>
                   </td>
@@ -362,9 +368,9 @@ export function ViewEmployees() {
                       {t(employee.status)}
                     </span>
                   </td>
-                  <td className="px-3 py-4 text-sm font-bold text-cyan-800 dark:text-cyan-200">${employee.salary.toLocaleString()}</td>
+                  <td className="px-3 py-4 text-sm font-bold text-cyan-800 dark:text-cyan-200">{formatMoney(employee.salary)}</td>
                   <td className="px-3 py-4 text-sm font-bold text-cyan-800 dark:text-cyan-200">
-                    {employee.salaryNet === undefined ? '-' : `$${employee.salaryNet.toLocaleString()}`}
+                    {employee.salaryNet === undefined ? '-' : formatMoney(employee.salaryNet)}
                   </td>
                   <td className="px-3 py-4 text-sm text-cyan-700 dark:text-cyan-300 font-medium">
                     {formatDate(new Date(employee.hireDate))}
@@ -426,6 +432,7 @@ export function ViewEmployees() {
           </p>
         </div>
       </div>
+      </section>
 
       {editingEmployee && (
         <div
@@ -591,7 +598,7 @@ export function ViewEmployees() {
                 <span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">{t('taxRate')}</span>
                 <input type="number" min="0" max="100" step="0.01" value={editForm.salaryTaxRate} onChange={(e) => handleEditChange('salaryTaxRate', e.target.value)} className="w-full px-4 py-3 rounded-xl aero-input outline-none transition-all text-cyan-900 dark:text-cyan-100 placeholder-cyan-600/50 dark:placeholder-cyan-400/50" required />
                 <span className="block rounded-xl border border-cyan-300/40 bg-white/45 px-4 py-2 text-sm font-bold text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-100">
-                  {t('netSalary')}: ${editSalaryNet.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  {t('netSalary')}: {formatMoney(toBaseCurrency(editSalaryNet))}
                 </span>
               </label>
               <label className="space-y-2">
@@ -746,8 +753,8 @@ export function ViewEmployees() {
                 [t('address'), viewingEmployee.address || '-'],
                 [t('department'), viewingEmployee.department],
                 [t('position'), viewingEmployee.position || '-'],
-                [t('grossSalary'), `$${viewingEmployee.salary.toLocaleString()}`],
-                [t('netSalary'), viewingEmployee.salaryNet === undefined ? '-' : `$${viewingEmployee.salaryNet.toLocaleString()}`],
+                [t('grossSalary'), formatMoney(viewingEmployee.salary)],
+                [t('netSalary'), viewingEmployee.salaryNet === undefined ? '-' : formatMoney(viewingEmployee.salaryNet)],
                 [t('hireDate'), formatDate(new Date(viewingEmployee.hireDate))],
                 [t('contractType'), viewingEmployee.contractType || '-'],
                 [t('workNormHours'), viewingEmployee.workNormHours === undefined ? '-' : viewingEmployee.workNormHours],
